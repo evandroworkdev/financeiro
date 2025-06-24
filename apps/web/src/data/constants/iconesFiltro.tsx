@@ -1,50 +1,51 @@
-import { CartaoDTO, CategoriaDTO, ContaDTO } from 'adapters'
+import { CartaoDTO, CategoriaDTO, ContaDTO } from "adapters";
 import {
-    IconArrowsDoubleSwNe,
-    IconBuildingBank,
-    IconCreditCard,
-    IconFilter,
-    IconFolders,
-    IconStack2,
-} from '@tabler/icons-react'
-import GrupoFiltro from '../model/GrupoFiltro'
-import { core } from '../../adapters'
+  IconArrowsDoubleSwNe,
+  IconBuildingBank,
+  IconCreditCard,
+  IconFilter,
+  IconFolders,
+  IconStack2,
+} from "@tabler/icons-react";
+import GrupoFiltro from "../model/GrupoFiltro";
+import useCoreFacade from "../hooks/useCoreFacade";
 
 const icones = [
-    { nome: 'Filtrar Por', icone: <IconFilter /> },
-    { nome: 'Filtrar Por (Contas)', icone: <IconBuildingBank /> },
-    { nome: 'Filtrar Por (Cartões)', icone: <IconCreditCard /> },
-    { nome: 'Agrupar Por', icone: <IconFolders /> },
-    { nome: 'Consolidar Por', icone: <IconStack2 /> },
-    { nome: 'Ordenar Por', icone: <IconArrowsDoubleSwNe /> },
-]
+  { nome: "Filtrar Por", icone: <IconFilter /> },
+  { nome: "Filtrar Por (Contas)", icone: <IconBuildingBank /> },
+  { nome: "Filtrar Por (Cartões)", icone: <IconCreditCard /> },
+  { nome: "Agrupar Por", icone: <IconFolders /> },
+  { nome: "Consolidar Por", icone: <IconStack2 /> },
+  { nome: "Ordenar Por", icone: <IconArrowsDoubleSwNe /> },
+];
 
 export function obterIcone(nome: string) {
-    return icones.find((i) => i.nome === nome)?.icone
+  return icones.find((i) => i.nome === nome)?.icone;
 }
 
 const gerarFiltros = async (
-    contas: ContaDTO[],
-    cartoes: CartaoDTO[],
-    categorias: CategoriaDTO[]
+  contas: ContaDTO[],
+  cartoes: CartaoDTO[],
+  categorias: CategoriaDTO[],
 ) => {
-    const filtros = await core.extrato.consultarFiltrosExtrato(cartoes, categorias, contas)
-    return filtros.reduce((grupos, filtro) => {
-        const grupo = grupos.find((g: any) => g.nome === filtro.grupo)
-        if (grupo) {
-            grupo.filtros.push(filtro)
-        } else {
-            grupos.push({
-                nome: filtro.grupo,
-                icone: icones.find((i) => i.nome === filtro.grupo)?.icone,
-                filtros: [filtro],
-            })
-        }
-        return grupos
-    }, [] as GrupoFiltro[])
-}
+  const core2 = useCoreFacade();
+  const filtros = await core2.extrato.consultarFiltrosExtrato(cartoes, categorias, contas);
+  return filtros.reduce((grupos, filtro) => {
+    const grupo = grupos.find((g: any) => g.nome === filtro.grupo);
+    if (grupo) {
+      grupo.filtros.push(filtro);
+    } else {
+      grupos.push({
+        nome: filtro.grupo,
+        icone: icones.find((i) => i.nome === filtro.grupo)?.icone,
+        filtros: [filtro],
+      });
+    }
+    return grupos;
+  }, [] as GrupoFiltro[]);
+};
 
-export default gerarFiltros
+export default gerarFiltros;
 
 // ;[
 //     {

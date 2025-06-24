@@ -2,11 +2,7 @@ import { NextFunction, Request, Response, Router } from "express";
 import ExtratoDAL from "../../dal/ExtratoMensalDAL";
 
 export default class ExtratoMensalSalvarStoreController {
-  constructor(
-    private server: Router,
-    private extratoMensalDAL: ExtratoDAL,
-    ...middleware: any[]
-  ) {
+  constructor(private server: Router, private extratoMensalDAL: ExtratoDAL, ...middleware: any[]) {
     this.server.put(
       "/extratos/mensais/:id",
       ...middleware,
@@ -15,7 +11,6 @@ export default class ExtratoMensalSalvarStoreController {
           const usuarioId = req.user.id;
           const id = req.params.id;
           const extrato = req.body;
-
           if (req.body.id && req.body.id !== id) {
             res.status(400).json({
               erro: {

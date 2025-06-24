@@ -79,11 +79,7 @@ export default class ApiStoreProvider implements ProvedorDados {
     };
     await this.api.httpPost(endpoint, entidades);
   }
-  async salvarAtribs(
-    caminho: string,
-    id: string,
-    attributes: any,
-  ): Promise<void> {
+  async salvarAtribs(caminho: string, id: string, attributes: any): Promise<void> {
     const rota = this.obterEndpoint(caminho, "salvarAtribs");
     const endpoint = rota.replace(":id", id);
     const atributos = { ...attributes, id };
@@ -105,6 +101,8 @@ export default class ApiStoreProvider implements ProvedorDados {
   async salvar(caminho: string, entidade: any, id?: string): Promise<any> {
     if (!(this.obterConfigEntidade(caminho).chave === "extrato")) {
     }
+    console.log("apiStore");
+    console.log(entidade);
     const rota = this.obterEndpoint(caminho, "salvar");
     const endpoint = rota.replace(":id", entidade.id);
     const nomeEntidade = this.obterConfigEntidade(caminho);
@@ -152,14 +150,7 @@ export default class ApiStoreProvider implements ProvedorDados {
 
     return {
       dados: data,
-      proximo: () =>
-        this.buscarPagina(
-          caminho,
-          orderByAtt,
-          direction,
-          qty,
-          data[data.length - 1],
-        ),
+      proximo: () => this.buscarPagina(caminho, orderByAtt, direction, qty, data[data.length - 1]),
     };
   }
 
@@ -205,10 +196,7 @@ export default class ApiStoreProvider implements ProvedorDados {
     return config;
   }
 
-  private obterEndpoint(
-    caminho: string,
-    metodo: keyof ConfigEntidade["endpoints"],
-  ): string {
+  private obterEndpoint(caminho: string, metodo: keyof ConfigEntidade["endpoints"]): string {
     let config = this.obterConfigEntidade(caminho);
     let endpoint: string;
 
@@ -223,9 +211,7 @@ export default class ApiStoreProvider implements ProvedorDados {
     }
 
     if (!endpoint) {
-      throw new Error(
-        `Endpoint não definido para o método "${metodo}" no caminho: ${caminho}`,
-      );
+      throw new Error(`Endpoint não definido para o método "${metodo}" no caminho: ${caminho}`);
     }
     return endpoint;
   }

@@ -1,5 +1,4 @@
 "use client";
-import { core } from "../../adapters";
 import { createContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { UsuarioDTO, UsuarioConfigDTO } from "adapters";
@@ -39,32 +38,23 @@ export function CentralDeAcessoProvider(props: any) {
   const router = useRouter();
   const [pronto, setPronto] = useState<boolean>(false);
   const [usuario, setUsuario] = useState<UsuarioDTO | null>(null);
-  const [usuarioConfig, setUsuarioConfig] = useState<UsuarioConfigDTO | null>(
-    null,
-  );
+  const [usuarioConfig, setUsuarioConfig] = useState<UsuarioConfigDTO | null>(null);
   const core2 = useCoreFacade();
 
   useEffect(() => {
-    const cancelar = core2.autenticacao.monitorar(
-      (usuario: UsuarioDTO | null) => {
-        autenticar(usuario).then((_) => setPronto(true));
-      },
-    );
+    const cancelar = core2.autenticacao.monitorar((usuario: UsuarioDTO | null) => {
+      autenticar(usuario).then((_) => setPronto(true));
+    });
     return () => {
       cancelar.then((fn) => fn());
     };
   }, []);
 
-  const atualizarUsuario = async (
-    novoUsuario?: UsuarioDTO,
-    apenasConfig: boolean = false,
-  ) => {
+  const atualizarUsuario = async (novoUsuario?: UsuarioDTO, apenasConfig: boolean = false) => {
     if (!novoUsuario) return;
     if (usuario && usuario.email !== novoUsuario.email) return logout();
     if (usuario && novoUsuario && usuario.email === novoUsuario.email) {
-      apenasConfig
-        ? setUsuarioConfig(novoUsuario.config)
-        : setUsuario(novoUsuario);
+      apenasConfig ? setUsuarioConfig(novoUsuario.config) : setUsuario(novoUsuario);
       await core2.usuario.salvar(novoUsuario);
     }
   };
@@ -123,7 +113,7 @@ export function CentralDeAcessoProvider(props: any) {
   const logout = async () => {
     try {
       iniciarExecucao();
-      await core.autenticacao.logout();
+      await core2.autenticacao.logout();
       await autenticar(null);
     } finally {
       pararExecucao();
@@ -136,9 +126,7 @@ export function CentralDeAcessoProvider(props: any) {
 
     const usuarioDB = await core2.usuario.consultar(usuarioAtual.email);
 
-    const usuarioAlterado = usuarioDB
-      ? { ...usuarioAtual, ...usuarioDB }
-      : null;
+    const usuarioAlterado = usuarioDB ? { ...usuarioAtual, ...usuarioDB } : null;
     setUsuario(usuarioAlterado);
     usuarioAlterado && setUsuarioConfig(usuarioAlterado.config);
   };

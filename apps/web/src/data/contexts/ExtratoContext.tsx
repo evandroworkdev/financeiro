@@ -1,5 +1,4 @@
 "use client";
-import { core } from "../../adapters";
 import {
   CartaoDTO,
   CategoriaDTO,
@@ -41,8 +40,7 @@ export interface ExtratoContextProps {
 const ExtratoContext = createContext<ExtratoContextProps>({} as any);
 
 export function ExtratoProvider(props: any) {
-  const { usuario, usuarioConfig, atualizarUsuarioConfig } =
-    useCentralDeAcesso();
+  const { usuario, usuarioConfig, atualizarUsuarioConfig } = useCentralDeAcesso();
   const { contas } = useContas();
   const { cartoes } = useCartoes();
   const { categorias } = useCategorias();
@@ -51,18 +49,13 @@ export function ExtratoProvider(props: any) {
 
   const [extrato, setExtrato] = useState<ExtratoDTO | null>(null);
   const [extratos, setExtratos] = useState<ExtratoDTO[]>([]);
-  const [extratoFiltrado, setExtratoFiltrado] = useState<ExtratoDTO | null>(
-    null,
-  );
-  const [extratoSubcategoria, setExtratoSubcategoria] =
-    useState<ExtratoDTO | null>(null);
+  const [extratoFiltrado, setExtratoFiltrado] = useState<ExtratoDTO | null>(null);
+  const [extratoSubcategoria, setExtratoSubcategoria] = useState<ExtratoDTO | null>(null);
 
   const [exibirFiltros, setExibirFiltros] = useState<boolean>(false);
   const [filtrosUsuario, setFiltrosUsuario] = useState<string[]>([]);
   const [filtrosAgrupados, setFiltrosAgrupados] = useState<GrupoFiltro[]>([]);
-  const [filtrosSelecionados, setFiltrosSelecionados] = useState<
-    FiltroExtratoDTO[]
-  >([]);
+  const [filtrosSelecionados, setFiltrosSelecionados] = useState<FiltroExtratoDTO[]>([]);
 
   const core2 = useCoreFacade();
 
@@ -112,10 +105,7 @@ export function ExtratoProvider(props: any) {
   async function consultarRecorrencia(recorrenciaId: string) {
     if (!usuario) return null;
 
-    const recorrencia = core2.extrato.consultarRecorrencia(
-      usuario,
-      recorrenciaId,
-    );
+    const recorrencia = core2.extrato.consultarRecorrencia(usuario, recorrenciaId);
     return recorrencia;
   }
 
@@ -124,8 +114,7 @@ export function ExtratoProvider(props: any) {
     const remover = filtrosUsuario.includes(filtro.id);
     const outrosFiltros = filtrosUsuario.filter((id) => {
       const filtroRemovido = remover && id === filtro.id;
-      const filtroEquivalente =
-        !remover && _prioridadePorId(id) === filtro.prioridade;
+      const filtroEquivalente = !remover && _prioridadePorId(id) === filtro.prioridade;
       return !filtroRemovido && !filtroEquivalente;
     });
     const filtros = remover ? outrosFiltros : [...outrosFiltros, filtro.id];
@@ -154,14 +143,10 @@ export function ExtratoProvider(props: any) {
       const extratos = await core2.extrato.consultarTodos(usuario, datas);
 
       const extratosOrdenados = extratos.sort(
-        (e1: ExtratoDTO, e2: ExtratoDTO) =>
-          e1.data.getTime() - e2.data.getTime(),
+        (e1: ExtratoDTO, e2: ExtratoDTO) => e1.data.getTime() - e2.data.getTime(),
       );
       setExtratos(extratosOrdenados);
-      setExtrato(
-        extratos.find((e: ExtratoDTO) => fn.dt.mesmoMes(e.data, dataRef)) ??
-          null,
-      );
+      setExtrato(extratos.find((e: ExtratoDTO) => fn.dt.mesmoMes(e.data, dataRef)) ?? null);
     } catch (error) {
       console.error(error);
     } finally {
@@ -184,19 +169,14 @@ export function ExtratoProvider(props: any) {
     if (!filtrosAgrupados?.length) await _carregarFiltros();
     if (!extrato) return;
 
-    const extratoFiltrado = await core.extrato.filtarExtrato(
-      extrato,
-      filtrosSelecionados,
-    );
+    const extratoFiltrado = await core2.extrato.filtarExtrato(extrato, filtrosSelecionados);
 
     setExtratoFiltrado(extratoFiltrado);
 
     const filtro = _filtroPorId("AgruparPorSubcategoria");
     if (!filtro) return;
 
-    const extratoSubcategoria = await core.extrato.filtarExtrato(extrato, [
-      filtro!,
-    ]);
+    const extratoSubcategoria = await core2.extrato.filtarExtrato(extrato, [filtro!]);
     setExtratoSubcategoria(extratoSubcategoria);
   }
 
@@ -205,11 +185,7 @@ export function ExtratoProvider(props: any) {
     categorias: CategoriaDTO[],
     contas: ContaDTO[],
   ): Promise<GrupoFiltro[]> {
-    const filtros = await core.extrato.consultarFiltrosExtrato(
-      cartoes,
-      categorias,
-      contas,
-    );
+    const filtros = await core2.extrato.consultarFiltrosExtrato(cartoes, categorias, contas);
     return filtros.reduce((grupos: GrupoFiltro[], filtro: FiltroExtratoDTO) => {
       const grupo = grupos.find((g) => g.nome === filtro.grupo);
       if (grupo) {
@@ -226,16 +202,12 @@ export function ExtratoProvider(props: any) {
   }
 
   function _filtroPorId(id: string) {
-    return filtrosAgrupados
-      .flatMap((grupo) => grupo.filtros)
-      .find((f) => f.id === id);
+    return filtrosAgrupados.flatMap((grupo) => grupo.filtros).find((f) => f.id === id);
   }
 
   function _prioridadePorId(id: string) {
     return (
-      filtrosAgrupados
-        .flatMap((grupo) => grupo.filtros)
-        .find((f) => f.id === id)?.prioridade ?? -1
+      filtrosAgrupados.flatMap((grupo) => grupo.filtros).find((f) => f.id === id)?.prioridade ?? -1
     );
   }
 
@@ -244,10 +216,7 @@ export function ExtratoProvider(props: any) {
       value={{
         get extratos() {
           if (!dataRef) return [];
-          const datas = fn.dt.mesesEntre(
-            dataRef,
-            fn.dt.subtrairMeses(dataRef, 11),
-          );
+          const datas = fn.dt.mesesEntre(dataRef, fn.dt.subtrairMeses(dataRef, 11));
           return datas
             .map((data) => extratos.find((e) => fn.dt.mesmoMes(e.data, data)))
             .filter((e) => e) as ExtratoDTO[];

@@ -18,7 +18,8 @@ import useCentralDeAcesso from "../hooks/useCentralDeAcesso";
 import useContas from "../hooks/useContas";
 import useDataRef from "../hooks/useDataRef";
 import useProcessamento from "../hooks/useProcessamento";
-import useCoreFacade from "../hooks/useCoreFacade";
+import useCoreApiHttpClient from "../hooks/useCoreApiHttpClient";
+import useClientFacade from "../hooks/useClientFacade";
 
 export interface ExtratoContextProps {
   alternarExibirFiltros: () => void;
@@ -57,7 +58,8 @@ export function ExtratoProvider(props: any) {
   const [filtrosAgrupados, setFiltrosAgrupados] = useState<GrupoFiltro[]>([]);
   const [filtrosSelecionados, setFiltrosSelecionados] = useState<FiltroExtratoDTO[]>([]);
 
-  const core2 = useCoreFacade();
+  const clientFacade = useClientFacade();
+  const coreApiHttpClient = useCoreApiHttpClient();
 
   useEffect(() => {
     _buscarExtratos(true);
@@ -81,12 +83,12 @@ export function ExtratoProvider(props: any) {
     if (!usuario) return;
 
     if (registro.tipo === "recorrencia") {
-      await core2.extrato.salvarRecorrencia(usuario, {
+      await coreApiHttpClient.extrato.salvarRecorrencia(usuario, {
         ...registro.recorrencia,
         transacao: registro.transacao,
       });
     } else if (extrato) {
-      await core2.extrato.salvarTransacao(usuario, extrato, registro.transacao);
+      await coreApiHttpClient.extrato.salvarTransacao(usuario, extrato, registro.transacao);
     }
     await _buscarExtratos();
   }
@@ -95,17 +97,17 @@ export function ExtratoProvider(props: any) {
     if (!usuario) return;
 
     if (registro.tipo === "recorrencia" && registro.recorrencia?.id) {
-      await core2.extrato.excluirRecorrencia(usuario, registro.recorrencia.id);
+      await coreApiHttpClient.extrato.excluirRecorrencia(usuario, registro.recorrencia.id);
     } else if (extrato) {
       const transacao = registro.transacao;
-      await core2.extrato.excluirTransacao(usuario, extrato, transacao);
+      await coreApiHttpClient.extrato.excluirTransacao(usuario, extrato, transacao);
     }
     await _buscarExtratos();
   }
   async function consultarRecorrencia(recorrenciaId: string) {
     if (!usuario) return null;
 
-    const recorrencia = core2.extrato.consultarRecorrencia(usuario, recorrenciaId);
+    const recorrencia = coreApiHttpClient.extrato.consultarRecorrencia(usuario, recorrenciaId);
     return recorrencia;
   }
 
@@ -140,7 +142,7 @@ export function ExtratoProvider(props: any) {
       const anoPassado = fn.dt.subtrairMeses(dataRef, 11);
       const datas = fn.dt.mesesEntre(anoPassado, dataRef);
 
-      const extratos = await core2.extrato.consultarTodos(usuario, datas);
+      const extratos = await coreApiHttpClient.extrato.consultarTodos(usuario, datas);
 
       const extratosOrdenados = extratos.sort(
         (e1: ExtratoDTO, e2: ExtratoDTO) => e1.data.getTime() - e2.data.getTime(),
@@ -169,14 +171,14 @@ export function ExtratoProvider(props: any) {
     if (!filtrosAgrupados?.length) await _carregarFiltros();
     if (!extrato) return;
 
-    const extratoFiltrado = await core2.extrato.filtarExtrato(extrato, filtrosSelecionados);
+    const extratoFiltrado = await clientFacade.extrato.filtarExtrato(extrato, filtrosSelecionados);
 
     setExtratoFiltrado(extratoFiltrado);
 
     const filtro = _filtroPorId("AgruparPorSubcategoria");
     if (!filtro) return;
 
-    const extratoSubcategoria = await core2.extrato.filtarExtrato(extrato, [filtro!]);
+    const extratoSubcategoria = await clientFacade.extrato.filtarExtrato(extrato, [filtro!]);
     setExtratoSubcategoria(extratoSubcategoria);
   }
 
@@ -185,7 +187,7 @@ export function ExtratoProvider(props: any) {
     categorias: CategoriaDTO[],
     contas: ContaDTO[],
   ): Promise<GrupoFiltro[]> {
-    const filtros = await core2.extrato.consultarFiltrosExtrato(cartoes, categorias, contas);
+    const filtros = await clientFacade.extrato.consultarFiltrosExtrato(cartoes, categorias, contas);
     return filtros.reduce((grupos: GrupoFiltro[], filtro: FiltroExtratoDTO) => {
       const grupo = grupos.find((g) => g.nome === filtro.grupo);
       if (grupo) {

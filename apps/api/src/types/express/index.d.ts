@@ -12,4 +12,5 @@ interface UsuarioRec {
   id: string;
   email: string;
   nome: string;
+  config: {};
 }

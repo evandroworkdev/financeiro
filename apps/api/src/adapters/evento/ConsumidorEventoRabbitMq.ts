@@ -1,12 +1,7 @@
 import { EventoDTO, ExtratoDTO } from "adapters";
 import parseDates from "../../utils/parseDate";
 import CanalEventosRabbitMQ from "./CanalEventosRabbitMQ";
-import {
-  AtualizarFaturas,
-  AtualizarSaldos,
-  Extrato,
-  RepositorioUsuario,
-} from "core";
+import { AtualizarFaturas, AtualizarSaldos, Extrato, RepositorioUsuario } from "core";
 
 export default class ConsumidorExtratoAlterado {
   constructor(
@@ -36,8 +31,7 @@ export default class ConsumidorExtratoAlterado {
         const email = eventoDTO.usuarioEmail!;
 
         try {
-          const consultarUsuario =
-            await this.repoUsuario.consultarPorEmail(email);
+          const consultarUsuario = await this.repoUsuario.consultarPorEmail(email);
           if (consultarUsuario.deuErrado || !consultarUsuario.instancia)
             return consultarUsuario.lancarErrorSeDeuErrado();
           const extratos = Extrato.novos(extratosDTO);
@@ -55,10 +49,7 @@ export default class ConsumidorExtratoAlterado {
           canal.ack(mensagem);
           console.log(`✅ Evento "extrato-alterado" consumido com sucesso.`);
         } catch (erro) {
-          console.error(
-            `❌ Erro ao processar evento "extrato-alterado":`,
-            erro,
-          );
+          console.error(`❌ Erro ao processar evento "extrato-alterado":`, erro);
           canal.nack(mensagem, false, false);
         }
       },

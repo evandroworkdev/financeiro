@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS transacoes_base (
     id UUID PRIMARY KEY,
-    recorrencia_id UUID UNIQUE REFERENCES recorrencias(id) ON DELETE CASCADE,
+    recorrencia_id UUID NOT NULL UNIQUE  REFERENCES recorrencias(id) ON DELETE CASCADE,
     usuario_id TEXT REFERENCES usuarios(id) ON DELETE CASCADE, 
     conta_id UUID REFERENCES contas(id) ON DELETE SET NULL,
     cartao_id UUID REFERENCES cartoes(id) ON DELETE SET NULL,

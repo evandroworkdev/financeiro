@@ -36,7 +36,6 @@ export default class ExcluirTransacao implements CasoDeUso<Entrada, void> {
     // const novoExtrato = gerarExtrato.instancia
 
     extrato.removerTransacao(transacao.id);
-    console.log("Caso de Uso");
     await this.repo.salvar(usuario, extrato);
 
     const evento = ExtratosAlterados.novo({

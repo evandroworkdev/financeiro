@@ -5,7 +5,7 @@ import { createContext, useEffect, useState } from "react";
 import useCentralDeAcesso from "../hooks/useCentralDeAcesso";
 import useDebounce from "../hooks/useDebounce";
 import useDataRef from "../hooks/useDataRef";
-import useCoreFacade from "../hooks/useCoreFacade";
+import useCoreApiHttpClient from "../hooks/useCoreApiHttpClient";
 
 export interface ContasContextProps {
   contas: ContaDTO[];
@@ -21,15 +21,13 @@ export interface ContasContextProps {
 const ContasContext = createContext<ContasContextProps>({} as any);
 
 export function ContasProvider(props: any) {
-  const [contaEmProcessamento, setContaEmProcessamento] = useState<
-    string | null
-  >(null);
+  const [contaEmProcessamento, setContaEmProcessamento] = useState<string | null>(null);
   const [contas, setContas] = useState<ContaDTO[]>([]);
   const { usuario } = useCentralDeAcesso();
   const { dataRef } = useDataRef();
   const debounce = useDebounce();
 
-  const core2 = useCoreFacade();
+  const coreApiHttpClient = useCoreApiHttpClient();
 
   useEffect(() => {
     consultarContas();
@@ -37,14 +35,14 @@ export function ContasProvider(props: any) {
 
   async function adicionarConta() {
     if (!usuario) return;
-    const conta = {
-      descricao: "Nova Conta",
-      banco: "",
+    const conta: ContaDTO = {
+      banco: "Banco",
+      descricao: "Descricao",
       cor: "",
       saldos: [],
     };
 
-    await core2.conta.salvar(usuario, conta);
+    await coreApiHttpClient.conta.salvar(usuario, conta);
     await consultarContas();
   }
 
@@ -53,7 +51,7 @@ export function ContasProvider(props: any) {
     debounce(
       async () => {
         setContaEmProcessamento(conta.id ?? "salvarConta");
-        await core2.conta.salvar(usuario, conta);
+        await coreApiHttpClient.conta.salvar(usuario, conta);
         await consultarContas();
         setContaEmProcessamento(null);
       },
@@ -66,14 +64,14 @@ export function ContasProvider(props: any) {
     if (!usuario || !contas || !conta.id) return;
     const encontrado = contas.find((c) => c.id === conta.id);
 
-    encontrado && (await core2.conta.excluir(usuario, encontrado));
+    encontrado && (await coreApiHttpClient.conta.excluir(usuario, encontrado));
 
     encontrado && setContas(contas.filter((c) => c.id !== encontrado.id));
   }
 
   async function consultarContas() {
     if (!usuario) return;
-    const contas = await core2.conta.consultar(usuario);
+    const contas = await coreApiHttpClient.conta.consultar(usuario);
     setContas(contas);
   }
 
@@ -97,9 +95,7 @@ export function ContasProvider(props: any) {
         creditos: 0,
         debitos: 0,
         acumulado:
-          (ultimoSaldo.acumulado ?? 0) +
-          (ultimoSaldo.creditos ?? 0) -
-          (ultimoSaldo.debitos ?? 0),
+          (ultimoSaldo.acumulado ?? 0) + (ultimoSaldo.creditos ?? 0) - (ultimoSaldo.debitos ?? 0),
       };
     }
 

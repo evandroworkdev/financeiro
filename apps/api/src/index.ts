@@ -1,53 +1,38 @@
 import "./setup";
 import express, { NextFunction, Request, Response } from "express";
 import cors, { CorsOptions } from "cors";
-import ContaRepositorioPgPrismaAdapter from "./adapters/database/ContaRepositorioPgPrismaAdapter";
-import CartaoRepositorioPgPrismaAdapter from "./adapters/database/CartaoRepositorioPgPrismaAdapter";
-import UsuarioRepositorioPgPrismaAdapter from "./adapters/database/UsuarioRepositorioPgPrismaAdapter";
 import CanalEventosRabbitMQ from "./adapters/evento/CanalEventosRabbitMQ";
 import ConsumidorEventoRabbitMq from "./adapters/evento/ConsumidorEventoRabbitMq";
 import { PrismaClient } from "@prisma/client";
 import { checkAuth } from "./middlewares/checkAuth";
-import CategoriasDAL from "./dal/CategoriaDAL";
-import ContaBuscarPoridStoreController from "./controllers/conta/ContaBuscarPorid";
-import ContaConsultarStoreController from "./controllers/conta/ContaBuscarTodos";
-import ContaSalvarStoreController from "./controllers/conta/ContaSalvar";
-import ContaSalvarAtribsStoreController from "./controllers/conta/ContaSalvarAtribs";
-import ContaDAL from "./dal/ContaDAL";
-import CartaoDAL from "./dal/CartaoDAL";
-import CartaoConsultarStoreController from "./controllers/cartao/CartaoBuscarTodos";
-import CartaoExisteStoreController from "./controllers/cartao/CartaoExiste";
-import CartaoSalvarStoreController from "./controllers/cartao/CartaoSalvar";
-import CartaoSalvarAtribsStoreController from "./controllers/cartao/CartaoSalvarAtribs";
-import PingController from "./controllers/usuario/Ping";
-import CategoriaBuscarPoridStoreController from "./controllers/categoria/CategoriaBuscarPorid";
-import CategoriaConsultarStoreController from "./controllers/categoria/CategoriaBuscarTodos";
-import CategoriaExcluirStoreController from "./controllers/categoria/CategoriaExcluir";
-import CategoriaExisteStoreController from "./controllers/categoria/CategoriaExiste";
-import CategoriaSalvarStoreController from "./controllers/categoria/CategoriaSalvar";
-import CategoriaSalvarAtribsStoreController from "./controllers/categoria/CategoriaSalvarAtribs";
-import CategoriaSalvarTodasStoreController from "./controllers/categoria/CategoriaSalvarTodos";
-import UsurioSalvarStoreController from "./controllers/usuario/UsuarioBuscarPorid";
-import UsuarioExisteStoreController from "./controllers/usuario/UsuarioExiste";
-import UsuarioSalvarStoreController from "./controllers/usuario/UsuarioSalvar";
-import UsuarioDAL from "./dal/UsuarioDAL";
-import ExtratoMensalBuscarPoridStoreController from "./controllers/extrato/ExtratoMensalBuscarPorid";
-import ExtratoMensalSalvarStoreController from "./controllers/extrato/ExtratoMensalSalvar";
-import ExtratoMensalBuscarTodosStoreController from "./controllers/extrato/ExtratoMensalBuscarTodos";
-import ExtratoMensalSalvarTodosStoreController from "./controllers/extrato/ExtratoMensalSalvarTodos";
-import ExtratoMensalBuscarPorIdsStoreController from "./controllers/extrato/ExtratoMensalBuscarPorIds";
-import ExtratoMensalDAL from "./dal/ExtratoMensalDAL";
-import ExtratoRecorrenciaDAL from "./dal/ExtratoRecorrenciaDAL";
-import ExtratoRecorrenciaBuscarPoridStoreController from "./controllers/extrato/ExtratoRecorrenciaBuscarPorid";
-import ExtratoRecorrenciaBuscarPorStoreController from "./controllers/extrato/ExtratoRecorrenciaBuscarPor";
-import ExtratoRecorrenciaBuscarTodosStoreController from "./controllers/extrato/ExtratoRecorrenciaBuscarTodos";
-import ExtratoRecorrenciaSalvarTodosStoreController from "./controllers/extrato/ExtratoRecorrenciaSalvarTodos";
-import ExtratoRecorrenciaExecutarTodosStoreController from "./controllers/extrato/ExtratoRecorrenciaExecutarTodos";
-import conversorDatasMiddlware from "./middlewares/conversorDatasMiddlware";
-import EventoSalvarTodosStoreController from "./controllers/evento/EventoSalvarTodos";
-import EventoExcluirStoreController from "./controllers/evento/EventoExcluir";
 import PublicadorEventoRabbitMQ from "./adapters/evento/PublicadorEventoRabbitMQ";
 import { AtualizarFaturas, AtualizarSaldos, ConsultarPorEmail } from "core";
+import CategoriaProvedorDadosPrismaAdapter from "./adapters/database/CategoriaProvedorDadosPrismaAdapter";
+import CategoriaConsultarController from "./controllers/categoria/Consultar";
+import CategoriaExcluirController from "./controllers/categoria/Excluir";
+import CategoriaSalvarController from "./controllers/categoria/Salvar";
+import CategoriaSalvarTodasController from "./controllers/categoria/SalvarTodas";
+import ContaProvedorDadosPrismaAdapter from "./adapters/database/ContaProvedorDadosPrismaAdapter";
+import ExtratoProvedorDadosPrismaAdapter from "./adapters/database/ExtratoProvedorDadosPrismaAdapter";
+import CartaoProvedorDadosPrismaAdapter from "./adapters/database/CartaoProvedorDadosPrismaAdapter";
+import UsuarioProvedorDadosPrismaAdapter from "./adapters/database/UsuarioProvedorDadosPrismaAdapter";
+import CartaoConsultarController from "./controllers/cartao/Consultar";
+import CartaoSalvarController from "./controllers/cartao/Salvar";
+import CartaoExcluirController from "./controllers/cartao/Excluir";
+import ContaConsultarController from "./controllers/conta/Consultar";
+import ContaExcluirController from "./controllers/conta/Excluir";
+import ContaSalvarController from "./controllers/conta/Salvar";
+import UsuarioSalvarController from "./controllers/usuario/Salvar";
+import UsuarioConsultarController from "./controllers/usuario/Consultar";
+import ExtratoMensalConsultarController from "./controllers/extrato/ExtratoMensalConsultar";
+import ExtratoMensalExcluirTransacaoController from "./controllers/extrato/ExtratoMensalExcluirTransacao";
+import ExtratoMensalSalvarController from "./controllers/extrato/ExtratoMensalSalvar";
+import ExtratoRecorrenciaConsultarController from "./controllers/extrato/ExtratoRecorrenciaConsultar";
+import ExtratoRecorrenciaConsultarPorIdController from "./controllers/extrato/ExtratoRecorrenciaConsultarPorId";
+import ExtratoRecorrenciaExcluirController from "./controllers/extrato/ExtratoRecorrenciaExcluir";
+import ExtratoRecorrenciaSalvarController from "./controllers/extrato/ExtratoRecorrenciaSalvar";
+import sanitizeInputMiddlware from "./middlewares/sanitizeInputMiddlware";
+import { CartaoRepositorio, ContaRepositorio, ServerFacade, UsuarioRepositorio } from "adapters";
 
 const corsOrigin = process.env.CORS_ORIGIN;
 
@@ -73,7 +58,8 @@ app.listen(process.env.PORT || 4000, () => {
 
 // ROTA PRINCIPAL - V1 ------------------------------------
 const v1Router = express.Router();
-app.use("/v1", v1Router, conversorDatasMiddlware);
+v1Router.use(sanitizeInputMiddlware);
+app.use("/v1", v1Router);
 
 // ROTAS AUTH ---------------------------------------------'
 const authRouter = express.Router();
@@ -102,36 +88,41 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
       res.status(404).json({ message: error.message });
       return;
     }
-    res.status(500).json({ message: error.message, e: "express" });
+    res.status(500).json({ message: error.stack });
     return;
   } else {
-    res.status(500).json({ message: "Erro desconhecido", e: "express" });
+    res.status(500).json({ message: "Erro desconhecido", Erro: error });
     return;
   }
 });
 
 // ADAPTADORES --------------------------------------------
-
 const conexaoPrisma = new PrismaClient();
-
-const repositorioContaPrisma = new ContaRepositorioPgPrismaAdapter(conexaoPrisma);
-const repositorioCartaoPrisma = new CartaoRepositorioPgPrismaAdapter(conexaoPrisma);
-const repositorioUsuarioPrisma = new UsuarioRepositorioPgPrismaAdapter(conexaoPrisma);
 
 const canalEventosRabbitMQ = new CanalEventosRabbitMQ();
 const publicadorEvento = new PublicadorEventoRabbitMQ(canalEventosRabbitMQ);
 
+const categoriaProvedorDados = new CategoriaProvedorDadosPrismaAdapter(conexaoPrisma);
+const contaProvedorDados = new ContaProvedorDadosPrismaAdapter(conexaoPrisma);
+const cartaoProvedorDados = new CartaoProvedorDadosPrismaAdapter(conexaoPrisma);
+const usuarioProvedorDados = new UsuarioProvedorDadosPrismaAdapter(conexaoPrisma);
+const extratoProvedorDados = new ExtratoProvedorDadosPrismaAdapter(conexaoPrisma);
+
+const repositorioContaPrisma = new ContaRepositorio(contaProvedorDados);
+const repositorioCartaoPrisma = new CartaoRepositorio(cartaoProvedorDados);
+const repositorioUsuarioPrisma = new UsuarioRepositorio(usuarioProvedorDados);
+
 // MIDDLEWARE --------------------------------------------
 
 // FACADE ------------------------------------------------
-
-// DAL
-const categoriasDAL = new CategoriasDAL(conexaoPrisma);
-const contaDAL = new ContaDAL(conexaoPrisma);
-const cartaoDAL = new CartaoDAL(conexaoPrisma);
-const usuarioDAL = new UsuarioDAL(conexaoPrisma);
-const extratoMensalDAL = new ExtratoMensalDAL(conexaoPrisma);
-const extratoRecorrenciaDAL = new ExtratoRecorrenciaDAL(conexaoPrisma);
+const serverFacade = new ServerFacade(
+  categoriaProvedorDados,
+  cartaoProvedorDados,
+  contaProvedorDados,
+  extratoProvedorDados,
+  usuarioProvedorDados,
+  publicadorEvento,
+);
 
 // CASOS DE USO ------------------------------------------
 const consultarPorEmail = new ConsultarPorEmail(repositorioUsuarioPrisma);
@@ -147,87 +138,41 @@ const consumidorEventoRabbitMq = new ConsumidorEventoRabbitMq(
 );
 consumidorEventoRabbitMq.iniciar();
 
-// DAL CONTROLLERS -------------------------------------------------------------
+//  CONTROLLERS ----------------------------------------------------------------
 
 //--------------------------------------------------------
-new CategoriaBuscarPoridStoreController(v1Router, categoriasDAL, checkAuth(consultarPorEmail));
-new CategoriaConsultarStoreController(v1Router, categoriasDAL, checkAuth(consultarPorEmail));
-new CategoriaExcluirStoreController(v1Router, categoriasDAL, checkAuth(consultarPorEmail));
-new CategoriaExisteStoreController(v1Router, categoriasDAL, checkAuth(consultarPorEmail));
-new CategoriaSalvarStoreController(v1Router, categoriasDAL, checkAuth(consultarPorEmail));
-new CategoriaSalvarAtribsStoreController(v1Router, categoriasDAL, checkAuth(consultarPorEmail));
-new CategoriaSalvarTodasStoreController(v1Router, categoriasDAL, checkAuth(consultarPorEmail));
+new CategoriaConsultarController(v1Router, serverFacade, checkAuth(consultarPorEmail));
+new CategoriaExcluirController(v1Router, serverFacade, checkAuth(consultarPorEmail));
+new CategoriaSalvarController(v1Router, serverFacade, checkAuth(consultarPorEmail));
+new CategoriaSalvarTodasController(v1Router, serverFacade, checkAuth(consultarPorEmail));
 
 //--------------------------------------------------------
-new CartaoConsultarStoreController(v1Router, cartaoDAL, checkAuth(consultarPorEmail));
-new CartaoExisteStoreController(v1Router, cartaoDAL, checkAuth(consultarPorEmail));
-new CartaoSalvarStoreController(v1Router, cartaoDAL, checkAuth(consultarPorEmail));
-new CartaoSalvarAtribsStoreController(v1Router, cartaoDAL, checkAuth(consultarPorEmail));
+new CartaoConsultarController(v1Router, serverFacade, checkAuth(consultarPorEmail));
+new CartaoSalvarController(v1Router, serverFacade, checkAuth(consultarPorEmail));
+new CartaoExcluirController(v1Router, serverFacade, checkAuth(consultarPorEmail));
 
 //--------------------------------------------------------
 
-new ContaConsultarStoreController(v1Router, contaDAL, checkAuth(consultarPorEmail));
-new ContaSalvarStoreController(v1Router, contaDAL, checkAuth(consultarPorEmail));
-new ContaSalvarAtribsStoreController(v1Router, contaDAL, checkAuth(consultarPorEmail));
-new ContaBuscarPoridStoreController(v1Router, contaDAL, checkAuth(consultarPorEmail));
+new ContaConsultarController(v1Router, serverFacade, checkAuth(consultarPorEmail));
+new ContaExcluirController(v1Router, serverFacade, checkAuth(consultarPorEmail));
+new ContaSalvarController(v1Router, serverFacade, checkAuth(consultarPorEmail));
 
 //------------------------------------------------------------------
-new UsurioSalvarStoreController(v1Router, usuarioDAL, checkAuth(consultarPorEmail));
-new UsuarioExisteStoreController(v1Router, usuarioDAL, checkAuth(consultarPorEmail));
-new UsuarioSalvarStoreController(v1Router, usuarioDAL, checkAuth(consultarPorEmail));
-//--------------------------------------------------------
-new ExtratoMensalBuscarPoridStoreController(
-  v1Router,
-  extratoMensalDAL,
-  checkAuth(consultarPorEmail),
-);
-new ExtratoMensalBuscarPorIdsStoreController(
-  v1Router,
-  extratoMensalDAL,
-  checkAuth(consultarPorEmail),
-);
+new UsuarioSalvarController(v1Router, serverFacade, checkAuth(consultarPorEmail));
+new UsuarioConsultarController(v1Router, serverFacade, checkAuth(consultarPorEmail));
 
-new ExtratoMensalBuscarTodosStoreController(
-  v1Router,
-  extratoMensalDAL,
-  checkAuth(consultarPorEmail),
-);
-new ExtratoMensalSalvarStoreController(v1Router, extratoMensalDAL, checkAuth(consultarPorEmail));
-new ExtratoMensalSalvarTodosStoreController(
-  v1Router,
-  extratoMensalDAL,
-  checkAuth(consultarPorEmail),
-);
+//--------------------------------------------------------
+new ExtratoMensalConsultarController(v1Router, serverFacade, checkAuth(consultarPorEmail));
+new ExtratoMensalExcluirTransacaoController(v1Router, serverFacade, checkAuth(consultarPorEmail));
+new ExtratoMensalSalvarController(v1Router, serverFacade, checkAuth(consultarPorEmail));
+
 //--------------------------------------------------------
 
-new ExtratoRecorrenciaBuscarPorStoreController(
+new ExtratoRecorrenciaConsultarController(v1Router, serverFacade, checkAuth(consultarPorEmail));
+new ExtratoRecorrenciaConsultarPorIdController(
   v1Router,
-  extratoRecorrenciaDAL,
+  serverFacade,
   checkAuth(consultarPorEmail),
 );
-new ExtratoRecorrenciaBuscarTodosStoreController(
-  v1Router,
-  extratoRecorrenciaDAL,
-  checkAuth(consultarPorEmail),
-);
-new ExtratoRecorrenciaExecutarTodosStoreController(
-  v1Router,
-  extratoRecorrenciaDAL,
-  checkAuth(consultarPorEmail),
-);
-new ExtratoRecorrenciaSalvarTodosStoreController(
-  v1Router,
-  extratoRecorrenciaDAL,
-  checkAuth(consultarPorEmail),
-);
-new ExtratoRecorrenciaBuscarPoridStoreController(
-  v1Router,
-  extratoRecorrenciaDAL,
-  checkAuth(consultarPorEmail),
-);
-//--------------------------------------------------------
-
-new EventoSalvarTodosStoreController(v1Router, publicadorEvento);
-new EventoExcluirStoreController(v1Router);
-// CONTROLLERS --------------------------------------------
-new PingController(v1Router, checkAuth(consultarPorEmail));
+new ExtratoRecorrenciaExcluirController(v1Router, serverFacade, checkAuth(consultarPorEmail));
+new ExtratoRecorrenciaSalvarController(v1Router, serverFacade, checkAuth(consultarPorEmail));

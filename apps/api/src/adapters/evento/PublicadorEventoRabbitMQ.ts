@@ -12,7 +12,7 @@ export default class PublicadorEventoRabbitMQ implements PublicadorEvento {
 
       for (const evento of eventos) {
         const nomeFila = evento.tipo;
-        const dados = JSON.stringify(evento);
+        const dados = JSON.stringify(evento.props);
         await canal.assertQueue(nomeFila, { durable: false });
         canal.sendToQueue(nomeFila, Buffer.from(dados));
 

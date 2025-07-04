@@ -5,7 +5,8 @@ import { UsuarioDTO, UsuarioConfigDTO } from "adapters";
 import Mensagem from "../model/Mensagem";
 import useCarregando from "../hooks/useCarregando";
 import useMensagens from "../hooks/useMensagens";
-import useCoreFacade from "../hooks/useCoreFacade";
+import useCoreApiHttpClient from "../hooks/useCoreApiHttpClient";
+import useClientFacade from "../hooks/useClientFacade";
 
 export interface CentralDeAcessoContextProps {
   pronto: boolean;
@@ -39,10 +40,11 @@ export function CentralDeAcessoProvider(props: any) {
   const [pronto, setPronto] = useState<boolean>(false);
   const [usuario, setUsuario] = useState<UsuarioDTO | null>(null);
   const [usuarioConfig, setUsuarioConfig] = useState<UsuarioConfigDTO | null>(null);
-  const core2 = useCoreFacade();
+  const coreApiHttpClient = useCoreApiHttpClient();
+  const clientFacade = useClientFacade();
 
   useEffect(() => {
-    const cancelar = core2.autenticacao.monitorar((usuario: UsuarioDTO | null) => {
+    const cancelar = clientFacade.autenticacao.monitorar((usuario: UsuarioDTO | null) => {
       autenticar(usuario).then((_) => setPronto(true));
     });
     return () => {
@@ -55,7 +57,7 @@ export function CentralDeAcessoProvider(props: any) {
     if (usuario && usuario.email !== novoUsuario.email) return logout();
     if (usuario && novoUsuario && usuario.email === novoUsuario.email) {
       apenasConfig ? setUsuarioConfig(novoUsuario.config) : setUsuario(novoUsuario);
-      await core2.usuario.salvar(novoUsuario);
+      await coreApiHttpClient.usuario.salvar(novoUsuario);
     }
   };
 
@@ -85,10 +87,10 @@ export function CentralDeAcessoProvider(props: any) {
   const login = async (provedor: string): Promise<UsuarioDTO | null> => {
     try {
       iniciarExecucao();
-      const usuarioLogado = await core2.autenticacao.login(provedor);
+      const usuarioLogado = await clientFacade.autenticacao.login(provedor);
 
       if (!usuarioLogado) return null;
-      await core2.usuario.salvar(usuarioLogado);
+      await coreApiHttpClient.usuario.salvar(usuarioLogado);
 
       if (!usuario) return null;
       await autenticar(usuario);
@@ -113,7 +115,7 @@ export function CentralDeAcessoProvider(props: any) {
   const logout = async () => {
     try {
       iniciarExecucao();
-      await core2.autenticacao.logout();
+      await clientFacade.autenticacao.logout();
       await autenticar(null);
     } finally {
       pararExecucao();
@@ -124,7 +126,7 @@ export function CentralDeAcessoProvider(props: any) {
     const usuarioAtual = usuarioParam ?? usuario;
     if (!usuarioAtual?.email) return;
 
-    const usuarioDB = await core2.usuario.consultar(usuarioAtual.email);
+    const usuarioDB = await coreApiHttpClient.usuario.consultar(usuarioAtual);
 
     const usuarioAlterado = usuarioDB ? { ...usuarioAtual, ...usuarioDB } : null;
     setUsuario(usuarioAlterado);

@@ -1,4 +1,3 @@
-import { core } from "../../adapters";
 import { fn } from "utils";
 import { RecorrenciaDTO, TransacaoDTO } from "adapters";
 import { TipoOperacao } from "core";
@@ -6,8 +5,8 @@ import { useState, useEffect } from "react";
 import useCentralDeAcesso from "./useCentralDeAcesso";
 import useDataRef from "./useDataRef";
 import useExtrato from "./useExtrato";
-import useApi from "./useApi";
-import useCoreFacade from "./useCoreFacade";
+import useCoreApiHttpClient from "./useCoreApiHttpClient";
+import useClientFacade from "./useClientFacade";
 
 interface EvolucaoRecorrencia {
   id: string;
@@ -24,7 +23,8 @@ export default function useEvolucaoRecorrencia() {
   const [evolucoes, setEvolucoes] = useState<EvolucaoRecorrencia[]>([]);
   const [grupos, setGrupos] = useState<any[]>([]);
 
-  const core2 = useCoreFacade();
+  const clientFacade = useClientFacade();
+  const coreApiHttpClient = useCoreApiHttpClient();
 
   useEffect(() => {
     consultarRecorrencias();
@@ -40,7 +40,7 @@ export default function useEvolucaoRecorrencia() {
 
   async function consultarRecorrencias() {
     if (!usuario) return;
-    const recs = await core2.extrato.consultarRecorrencias(usuario);
+    const recs = await coreApiHttpClient.extrato.consultarRecorrencias(usuario);
     setRecorrencias(recs);
   }
 
@@ -50,10 +50,7 @@ export default function useEvolucaoRecorrencia() {
 
     const novasEvolucoes = await Promise.all(
       ids.map(async (id) => {
-        const transacoes = await core.extrato.relatorioEvolucaoRecorrencia(
-          extratos,
-          id,
-        );
+        const transacoes = await clientFacade.extrato.relatorioEvolucaoRecorrencia(extratos, id);
         return { id, transacoes };
       }),
     );
@@ -85,15 +82,10 @@ export default function useEvolucaoRecorrencia() {
       .filter((evol) => !id || evol.id === id)
       .map((evol) => {
         if (!idsSelecionados.includes(evol.id)) return 0;
-        const transacao = evol.transacoes.find((t) =>
-          fn.dt.mesmoMes(t.data, data),
-        );
+        const transacao = evol.transacoes.find((t) => fn.dt.mesmoMes(t.data, data));
 
         if (!transacao) return 0;
-        return (
-          (transacao.valor ?? 0) *
-          (transacao.operacao === TipoOperacao.RECEITA ? 1 : -1)
-        );
+        return (transacao.valor ?? 0) * (transacao.operacao === TipoOperacao.RECEITA ? 1 : -1);
       })
       .reduce((t, v) => t + v, 0);
   }
@@ -108,28 +100,4 @@ export default function useEvolucaoRecorrencia() {
     grupos,
     selecionarRecorrencias: consultarEvolucoes,
   };
-}
-
-function transformarDatas(obj: any): any {
-  if (Array.isArray(obj)) {
-    return obj.map(transformarDatas);
-  }
-
-  if (obj !== null && typeof obj === "object") {
-    const novoObj: any = {};
-    for (const chave in obj) {
-      const valor = obj[chave];
-      if (
-        typeof valor === "string" &&
-        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/.test(valor)
-      ) {
-        novoObj[chave] = new Date(valor);
-      } else {
-        novoObj[chave] = transformarDatas(valor);
-      }
-    }
-    return novoObj;
-  }
-
-  return obj;
 }

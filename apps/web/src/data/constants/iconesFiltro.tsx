@@ -8,7 +8,7 @@ import {
   IconStack2,
 } from "@tabler/icons-react";
 import GrupoFiltro from "../model/GrupoFiltro";
-import useCoreFacade from "../hooks/useCoreFacade";
+import useClientFacade from "../hooks/useClientFacade";
 
 const icones = [
   { nome: "Filtrar Por", icone: <IconFilter /> },
@@ -28,8 +28,8 @@ const gerarFiltros = async (
   cartoes: CartaoDTO[],
   categorias: CategoriaDTO[],
 ) => {
-  const core2 = useCoreFacade();
-  const filtros = await core2.extrato.consultarFiltrosExtrato(cartoes, categorias, contas);
+  const clientFacade = useClientFacade();
+  const filtros = await clientFacade.extrato.consultarFiltrosExtrato(cartoes, categorias, contas);
   return filtros.reduce((grupos, filtro) => {
     const grupo = grupos.find((g: any) => g.nome === filtro.grupo);
     if (grupo) {

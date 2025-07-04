@@ -101,8 +101,6 @@ export default class ApiStoreProvider implements ProvedorDados {
   async salvar(caminho: string, entidade: any, id?: string): Promise<any> {
     if (!(this.obterConfigEntidade(caminho).chave === "extrato")) {
     }
-    console.log("apiStore");
-    console.log(entidade);
     const rota = this.obterEndpoint(caminho, "salvar");
     const endpoint = rota.replace(":id", entidade.id);
     const nomeEntidade = this.obterConfigEntidade(caminho);

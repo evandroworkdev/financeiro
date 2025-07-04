@@ -2,6 +2,7 @@
 import { useCallback, useContext } from "react";
 import RespostaApi from "../model/RespostaApi";
 import { getAuth } from "firebase/auth";
+import { transformarDatas } from "../utils/transformarDate";
 
 export default function useApi() {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL!;
@@ -26,12 +27,18 @@ export default function useApi() {
         next: { revalidate: 0 },
       });
 
-      const json = await res.json();
+      let resJson;
+      try {
+        const json = await res.json();
+        resJson = transformarDatas(json);
+      } catch (error) {
+        resJson = null;
+      }
       const sucesso = calcularSucesso(res.status);
-      const erros = sucesso ? [] : json?.erros ?? ["Erro desconhecido"];
+      const erros = sucesso ? [] : resJson?.erros ?? ["Erro desconhecido - RESJSON"];
 
       return {
-        json,
+        json: resJson,
         status: res.status,
         sucesso,
         erros,
@@ -41,11 +48,7 @@ export default function useApi() {
   );
 
   const httpPost = useCallback(
-    async function (
-      path: string,
-      body: any,
-      customToken?: string,
-    ): Promise<RespostaApi> {
+    async function (path: string, body: any, customToken?: string): Promise<RespostaApi> {
       const url = `${baseUrl}${path}`;
       const token = customToken ?? (await getToken());
 
@@ -63,8 +66,10 @@ export default function useApi() {
       let resJson;
       try {
         const json = await res.json();
-        resJson = json;
-      } catch (error) {}
+        resJson = transformarDatas(json);
+      } catch (error) {
+        resJson = null;
+      }
       const sucesso = calcularSucesso(res.status);
       const erros = sucesso ? [] : resJson?.erros ?? ["Erro desconhecido"];
 
@@ -78,11 +83,7 @@ export default function useApi() {
     [baseUrl],
   );
   const httpPut = useCallback(
-    async function (
-      path: string,
-      body: any,
-      customToken?: string,
-    ): Promise<RespostaApi> {
+    async function (path: string, body: any, customToken?: string): Promise<RespostaApi> {
       const url = `${baseUrl}${path}`;
       const token = customToken ?? (await getToken());
 
@@ -100,8 +101,10 @@ export default function useApi() {
       let resJson;
       try {
         const json = await res.json();
-        resJson = json;
-      } catch (error) {}
+        resJson = transformarDatas(json);
+      } catch (error) {
+        resJson = null;
+      }
       const sucesso = calcularSucesso(res.status);
       const erros = sucesso ? [] : resJson?.erros ?? ["Erro desconhecido"];
 
@@ -114,6 +117,41 @@ export default function useApi() {
     },
     [baseUrl],
   );
+  const httpPatch = useCallback(
+    async function (path: string, body: any, customToken?: string): Promise<RespostaApi> {
+      const url = `${baseUrl}${path}`;
+      const token = customToken ?? (await getToken());
+
+      const res = await fetch(url, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${customToken ?? token}`,
+        },
+        cache: "no-cache",
+        body: JSON.stringify(body),
+        next: { revalidate: 0 },
+      });
+
+      let resJson;
+      try {
+        const json = await res.json();
+        resJson = transformarDatas(json);
+      } catch (error) {
+        resJson = null;
+      }
+      const sucesso = calcularSucesso(res.status);
+      const erros = sucesso ? [] : resJson?.erros ?? ["Erro desconhecido"];
+      return {
+        json: resJson,
+        status: res.status,
+        sucesso,
+        erros,
+      };
+    },
+    [baseUrl],
+  );
+
   const httpDelete = useCallback(
     async function (path: string, customToken?: string): Promise<RespostaApi> {
       const url = `${baseUrl}${path}`;
@@ -132,8 +170,10 @@ export default function useApi() {
       let resJson;
       try {
         const json = await res.json();
-        resJson = json;
-      } catch (error) {}
+        resJson = transformarDatas(json);
+      } catch (error) {
+        resJson = null;
+      }
       const sucesso = calcularSucesso(res.status);
       const erros = sucesso ? [] : resJson?.erros ?? ["Erro desconhecido"];
 
@@ -151,5 +191,5 @@ export default function useApi() {
     return status >= 200 && status < 300;
   }
 
-  return { httpGet, httpPost, httpPut, httpDelete };
+  return { httpGet, httpPost, httpPut, httpDelete, httpPatch };
 }

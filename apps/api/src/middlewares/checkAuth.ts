@@ -12,9 +12,7 @@ export function checkAuth(consultarPorEmail: ConsultarPorEmail) {
 
     const idToken = authHeader.split("Bearer ")[1];
     if (!idToken) {
-      return res
-        .status(401)
-        .json({ error: "Token ausente após o prefixo Bearer" });
+      return res.status(401).json({ error: "Token ausente após o prefixo Bearer" });
     }
 
     try {
@@ -26,21 +24,31 @@ export function checkAuth(consultarPorEmail: ConsultarPorEmail) {
         return res.status(403).json({ error: "Usuário desativado" });
       }
 
-      const usuarioResultado = await consultarPorEmail.executar(
-        decodedToken.email!,
-      );
-      if (
-        usuarioResultado.deuErrado ||
-        !usuarioResultado.comoFalha ||
-        !usuarioResultado.instancia
-      ) {
-        return res.status(404).json({ error: "Usuário não encontrado" });
-      }
+      // const usuarioResultado = await consultarPorEmail.executar(decodedToken.email!);
+      // if (
+      //   usuarioResultado.deuErrado ||
+      //   !usuarioResultado.comoFalha ||
+      //   !usuarioResultado.instancia
+      // ) {
+      //   return res.status(404).json({ error: "Usuário não encontrado" });
+      // }
 
+      // req.user = {
+      //   id: usuarioResultado.instancia.id.valor,
+      //   nome: usuarioResultado.instancia.nome.valor,
+      //   email: usuarioResultado.instancia.email.valor,
+      //   config: usuarioResultado.instancia.config,
+      // };
+
+      const id = userRecord.uid;
+      const nome = userRecord.displayName!;
+      const email = userRecord.email!;
+      const config = {};
       req.user = {
-        id: usuarioResultado.instancia.id.valor,
-        nome: usuarioResultado.instancia.nome.valor,
-        email: usuarioResultado.instancia.nome.valor,
+        id,
+        nome,
+        email,
+        config,
       };
 
       return next();

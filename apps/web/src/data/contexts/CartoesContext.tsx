@@ -6,7 +6,7 @@ import { createContext, useEffect, useState } from "react";
 import useCentralDeAcesso from "../hooks/useCentralDeAcesso";
 import useDebounce from "../hooks/useDebounce";
 import useDataRef from "../hooks/useDataRef";
-import useCoreFacade from "../hooks/useCoreFacade";
+import useCoreApiHttpClient from "../hooks/useCoreApiHttpClient";
 
 export interface CartoesContextProps {
   cartoes: CartaoDTO[];
@@ -23,14 +23,12 @@ const CartoesContext = createContext<CartoesContextProps>({} as any);
 
 export function CartoesProvider(props: any) {
   const [cartoes, setCartoes] = useState<CartaoDTO[]>([]);
-  const [cartaoEmProcessamento, setCartaoEmProcessamento] = useState<
-    string | null
-  >(null);
+  const [cartaoEmProcessamento, setCartaoEmProcessamento] = useState<string | null>(null);
   const { usuario } = useCentralDeAcesso();
   const { dataRef } = useDataRef();
   const debounce = useDebounce();
 
-  const core2 = useCoreFacade();
+  const coreApiHttpClient = useCoreApiHttpClient();
 
   useEffect(() => {
     consultarCartoes();
@@ -40,12 +38,12 @@ export function CartoesProvider(props: any) {
     if (!usuario) return;
 
     const cartao = {
-      descricao: "Novo Cartão",
+      descricao: "Descricao",
       bandeira: TipoBandeira.MASTERCARD,
       cor: "",
       faturas: [],
     };
-    await core2.cartao.salvar(usuario, cartao);
+    await coreApiHttpClient.cartao.salvar(usuario, cartao);
     await consultarCartoes();
   }
 
@@ -54,7 +52,7 @@ export function CartoesProvider(props: any) {
     debounce(
       async () => {
         setCartaoEmProcessamento(cartao.id ?? "salvarCartao");
-        await core2.cartao.salvar(usuario, cartao);
+        await coreApiHttpClient.cartao.salvar(usuario, cartao);
         await consultarCartoes();
         setCartaoEmProcessamento(null);
       },
@@ -66,13 +64,13 @@ export function CartoesProvider(props: any) {
   async function excluirCartao(cartao: CartaoDTO) {
     if (!usuario || !cartoes || !cartao.id) return;
     const encontrado = cartoes.find((c) => c.id === cartao.id);
-    encontrado && (await core2.cartao.excluir(usuario, encontrado));
+    encontrado && (await coreApiHttpClient.cartao.excluir(usuario, encontrado));
     encontrado && setCartoes(cartoes.filter((c) => c.id !== encontrado.id));
   }
 
   async function consultarCartoes() {
     if (!usuario) return;
-    const cartoes = await core2.cartao.consultar(usuario);
+    const cartoes = await coreApiHttpClient.cartao.consultar(usuario);
 
     setCartoes(cartoes);
   }

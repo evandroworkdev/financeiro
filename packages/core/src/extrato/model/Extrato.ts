@@ -126,6 +126,20 @@ export default class Extrato extends Entidade<Extrato, ExtratoProps> {
     this._grupos = AgruparTransacoes.com(this._transacoes);
   }
 
+  adicionarTransacao(novaTransacao: Transacao): void {
+    const existe = this._transacoes.some((t) => t.id.igual(novaTransacao.id));
+    if (existe) return;
+
+    this._transacoes.push(novaTransacao);
+
+    this._sumario = Extrato.gerarSumario({
+      data: this.data,
+      transacoes: this._transacoes.map((t) => t.props),
+    });
+
+    this._grupos = AgruparTransacoes.com(this._transacoes);
+  }
+
   private static gerarSumario(extrato: ExtratoProps): Sumario {
     if (extrato.transacoes?.length) return GerarSumario.com(extrato.data, extrato.transacoes);
     if (extrato.sumario) return Sumario.novo(extrato.sumario).instancia;

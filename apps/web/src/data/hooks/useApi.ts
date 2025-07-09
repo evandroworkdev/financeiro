@@ -17,15 +17,25 @@ export default function useApi() {
     async function (path: string, customToken?: string): Promise<RespostaApi> {
       const url = `${baseUrl}${path}`;
       const token = customToken ?? (await getToken());
+      let res: Response;
 
-      const res = await fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${customToken ?? token}`,
-        },
-        cache: "no-cache",
-        next: { revalidate: 0 },
-      });
+      try {
+        res = await fetch(url, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${customToken ?? token}`,
+          },
+          cache: "no-store",
+          next: { revalidate: 0 },
+        });
+      } catch (error) {
+        return {
+          json: null,
+          status: 0,
+          sucesso: false,
+          erros: ["Servidor inacessível."],
+        };
+      }
 
       let resJson;
       try {
@@ -35,7 +45,8 @@ export default function useApi() {
         resJson = null;
       }
       const sucesso = calcularSucesso(res.status);
-      const erros = sucesso ? [] : resJson?.erros ?? ["Erro desconhecido - RESJSON"];
+      const erros = sucesso ? [] : resJson?.errors ?? ["Tipo Erro desconhecido"];
+      if (!sucesso) throw erros;
 
       return {
         json: resJson,
@@ -51,17 +62,27 @@ export default function useApi() {
     async function (path: string, body: any, customToken?: string): Promise<RespostaApi> {
       const url = `${baseUrl}${path}`;
       const token = customToken ?? (await getToken());
+      let res: Response;
 
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${customToken ?? token}`,
-        },
-        cache: "no-cache",
-        body: JSON.stringify(body),
-        next: { revalidate: 0 },
-      });
+      try {
+        res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${customToken ?? token}`,
+          },
+          cache: "no-store",
+          body: JSON.stringify(body),
+          next: { revalidate: 0 },
+        });
+      } catch (error) {
+        return {
+          json: null,
+          status: 0,
+          sucesso: false,
+          erros: ["Servidor inacessível."],
+        };
+      }
 
       let resJson;
       try {
@@ -71,7 +92,8 @@ export default function useApi() {
         resJson = null;
       }
       const sucesso = calcularSucesso(res.status);
-      const erros = sucesso ? [] : resJson?.erros ?? ["Erro desconhecido"];
+      const erros = sucesso ? [] : resJson?.errors ?? ["Tipo Erro desconhecido"];
+      if (!sucesso) throw erros;
 
       return {
         json: resJson,
@@ -86,17 +108,27 @@ export default function useApi() {
     async function (path: string, body: any, customToken?: string): Promise<RespostaApi> {
       const url = `${baseUrl}${path}`;
       const token = customToken ?? (await getToken());
+      let res: Response;
 
-      const res = await fetch(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${customToken ?? token}`,
-        },
-        cache: "no-cache",
-        body: JSON.stringify(body),
-        next: { revalidate: 0 },
-      });
+      try {
+        res = await fetch(url, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${customToken ?? token}`,
+          },
+          cache: "no-store",
+          body: JSON.stringify(body),
+          next: { revalidate: 0 },
+        });
+      } catch (error) {
+        return {
+          json: null,
+          status: 0,
+          sucesso: false,
+          erros: ["Servidor inacessível."],
+        };
+      }
 
       let resJson;
       try {
@@ -106,7 +138,8 @@ export default function useApi() {
         resJson = null;
       }
       const sucesso = calcularSucesso(res.status);
-      const erros = sucesso ? [] : resJson?.erros ?? ["Erro desconhecido"];
+      const erros = sucesso ? [] : resJson?.errors ?? ["Tipo Erro desconhecido"];
+      if (!sucesso) throw erros;
 
       return {
         json: resJson,
@@ -121,17 +154,27 @@ export default function useApi() {
     async function (path: string, body: any, customToken?: string): Promise<RespostaApi> {
       const url = `${baseUrl}${path}`;
       const token = customToken ?? (await getToken());
+      let res: Response;
 
-      const res = await fetch(url, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${customToken ?? token}`,
-        },
-        cache: "no-cache",
-        body: JSON.stringify(body),
-        next: { revalidate: 0 },
-      });
+      try {
+        res = await fetch(url, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${customToken ?? token}`,
+          },
+          cache: "no-store",
+          body: JSON.stringify(body),
+          next: { revalidate: 0 },
+        });
+      } catch (error) {
+        return {
+          json: null,
+          status: 0,
+          sucesso: false,
+          erros: ["Servidor inacessível."],
+        };
+      }
 
       let resJson;
       try {
@@ -141,7 +184,8 @@ export default function useApi() {
         resJson = null;
       }
       const sucesso = calcularSucesso(res.status);
-      const erros = sucesso ? [] : resJson?.erros ?? ["Erro desconhecido"];
+      const erros = sucesso ? [] : resJson?.errors ?? ["Tipo Erro desconhecido"];
+
       return {
         json: resJson,
         status: res.status,
@@ -156,16 +200,26 @@ export default function useApi() {
     async function (path: string, customToken?: string): Promise<RespostaApi> {
       const url = `${baseUrl}${path}`;
       const token = customToken ?? (await getToken());
+      let res: Response;
 
-      const res = await fetch(url, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${customToken ?? token}`,
-        },
-        cache: "no-cache",
-        next: { revalidate: 0 },
-      });
+      try {
+        res = await fetch(url, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${customToken ?? token}`,
+          },
+          cache: "no-store",
+          next: { revalidate: 0 },
+        });
+      } catch (error) {
+        return {
+          json: null,
+          status: 0,
+          sucesso: false,
+          erros: ["Servidor inacessível."],
+        };
+      }
 
       let resJson;
       try {
@@ -175,7 +229,8 @@ export default function useApi() {
         resJson = null;
       }
       const sucesso = calcularSucesso(res.status);
-      const erros = sucesso ? [] : resJson?.erros ?? ["Erro desconhecido"];
+      const erros = sucesso ? [] : resJson?.errors ?? ["Tipo Erro desconhecido"];
+      if (!sucesso) throw erros;
 
       return {
         json: resJson,

@@ -87,14 +87,12 @@ export function CentralDeAcessoProvider(props: any) {
   const login = async (provedor: string): Promise<UsuarioDTO | null> => {
     try {
       iniciarExecucao();
-      const usuarioLogado = await clientFacade.autenticacao.login(provedor);
-
-      if (!usuarioLogado) return null;
-      await coreApiHttpClient.usuario.salvar(usuarioLogado);
-
+      const usuario = await clientFacade.autenticacao.login(provedor);
       if (!usuario) return null;
+
       await autenticar(usuario);
       router.push("/");
+
       return usuario;
     } catch (e: any) {
       if (e.code === "auth/account-exists-with-different-credential") {

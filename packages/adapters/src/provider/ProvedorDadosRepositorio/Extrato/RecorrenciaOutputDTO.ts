@@ -1,4 +1,4 @@
-import { TransacaoOutputDTO } from "./TransacaoOutputDTO";
+import { TransacaoBaseOutputDTO } from "./TransacaoBaseOutputDTO";
 
 export interface RecorrenciaOutputDTO {
   id: string;
@@ -6,5 +6,5 @@ export interface RecorrenciaOutputDTO {
   dataFim: Date | null;
   indefinida: boolean;
   qtdeDeParcelas: number | null;
-  transacao: TransacaoOutputDTO | null;
+  transacao: TransacaoBaseOutputDTO | null;
 }

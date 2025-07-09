@@ -17,20 +17,22 @@ export default class ContaProvedorDadosPrismaAdapter implements ProvedorDadosCon
 
   async salvar(usuarioId: string, conta: ContaInputDTO): Promise<void> {
     await this.prisma.$transaction(async (trans) => {
+      const now = new Date();
       const dados = this.toContaPrismaCreateFromContaInput(conta, usuarioId);
       await trans.contas.upsert({
         where: { id: conta.id, usuario_id: usuarioId },
-        update: { ...dados, updated_at: new Date() },
-        create: { ...dados, updated_at: new Date() },
+        create: { ...dados, created_at: now },
+        update: { ...dados, updated_at: now },
       });
 
       for (const saldo of conta.saldos) {
+        const dados = this.toSaldoPrismaCreateFromSaldoInput(saldo, conta.id);
         await trans.saldos.upsert({
           where: {
             id_conta_id: { id: saldo.id, conta_id: conta.id },
           },
-          update: this.toSaldoPrismaCreateFromSaldoInput(saldo, conta.id),
-          create: this.toSaldoPrismaCreateFromSaldoInput(saldo, conta.id),
+          create: { ...dados, created_at: now },
+          update: { ...dados, updated_at: now },
         });
       }
     });
@@ -38,19 +40,22 @@ export default class ContaProvedorDadosPrismaAdapter implements ProvedorDadosCon
   async salvarTodas(usuarioId: string, contas: ContaInputDTO[]): Promise<void> {
     await this.prisma.$transaction(async (trans) => {
       for (const conta of contas) {
+        const now = new Date();
+        const dados = this.toContaPrismaCreateFromContaInput(conta, usuarioId);
         await trans.contas.upsert({
           where: { id: conta.id, usuario_id: usuarioId },
-          update: this.toContaPrismaCreateFromContaInput(conta, usuarioId),
-          create: this.toContaPrismaCreateFromContaInput(conta, usuarioId),
+          create: { ...dados, created_at: now },
+          update: { ...dados, updated_at: now },
         });
 
         for (const saldo of conta.saldos) {
+          const dados = this.toSaldoPrismaCreateFromSaldoInput(saldo, conta.id);
           await trans.saldos.upsert({
             where: {
               id_conta_id: { id: saldo.id, conta_id: conta.id },
             },
-            update: this.toSaldoPrismaCreateFromSaldoInput(saldo, conta.id),
-            create: this.toSaldoPrismaCreateFromSaldoInput(saldo, conta.id),
+            update: { ...dados, updated_at: now },
+            create: { ...dados, created_at: now },
           });
         }
       }
@@ -62,7 +67,13 @@ export default class ContaProvedorDadosPrismaAdapter implements ProvedorDadosCon
         usuario_id: usuarioId,
         deleted_at: null,
       },
-      include: { saldos: true },
+      include: {
+        saldos: {
+          where: {
+            deleted_at: null,
+          },
+        },
+      },
     });
 
     const contasOutput = consultaDb.map((c: ContaPrismaSchema) =>
@@ -73,13 +84,23 @@ export default class ContaProvedorDadosPrismaAdapter implements ProvedorDadosCon
   }
 
   async excluir(usuarioId: string, contaId: string): Promise<void> {
-    await this.prisma.contas.update({
-      where: {
-        id: contaId,
-        usuario_id: usuarioId,
-      },
-      data: { deleted_at: new Date() },
-    });
+    const now = new Date();
+
+    await this.prisma.$transaction([
+      this.prisma.contas.update({
+        where: {
+          id: contaId,
+          usuario_id: usuarioId,
+        },
+        data: {
+          deleted_at: now,
+        },
+      }),
+      this.prisma.saldos.updateMany({
+        where: { conta_id: contaId, deleted_at: null },
+        data: { deleted_at: now },
+      }),
+    ]);
   }
 
   private toContaPrismaCreateFromContaInput(

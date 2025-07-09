@@ -1,3 +1,5 @@
+import { ValoresDetalhadosBaseInputDTO } from "./ValoresDetalhadosBaseInputDTO";
+
 export interface TransacaoBaseInputDTO {
   id: string;
   usuarioId: string;
@@ -10,10 +12,7 @@ export interface TransacaoBaseInputDTO {
   valor: number;
   data: Date;
   consolidada: boolean;
-  emMemoria: boolean;
-  virtual: boolean;
   operacao: string;
   observacoes: string;
-  valoresDetalhados: [];
-  agruparPor: string;
+  valoresDetalhados: ValoresDetalhadosBaseInputDTO[];
 }

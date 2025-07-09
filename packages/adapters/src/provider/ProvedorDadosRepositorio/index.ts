@@ -29,6 +29,12 @@ import { TransacaoBaseOutputDTO } from "./Extrato/TransacaoBaseOutputDTO";
 import { UsuarioInputDTO } from "./Usuario/UsuarioInputDTO";
 import { UsuarioOutputDTO } from "./Usuario/UsuarioOutputDTO";
 
+import { ValoresDetalhadosInputDTO } from "./Extrato/ValoresDetalhadosInputDTO";
+import { ValoresDetalhadosOutputDTO } from "./Extrato/ValoresDetalhadosOutputDTO";
+
+import { ValoresDetalhadosBaseInputDTO } from "./Extrato/ValoresDetalhadosBaseInputDTO";
+import { ValoresDetalhadosBaseOutputDTO } from "./Extrato/ValoresDetalhadosBaseOutputDTO";
+
 export type {
   ProvedorDadosCategoria,
   ProvedorDadosCartao,
@@ -55,4 +61,8 @@ export type {
   TransacaoBaseOutputDTO,
   UsuarioInputDTO,
   UsuarioOutputDTO,
+  ValoresDetalhadosInputDTO,
+  ValoresDetalhadosOutputDTO,
+  ValoresDetalhadosBaseInputDTO,
+  ValoresDetalhadosBaseOutputDTO,
 };

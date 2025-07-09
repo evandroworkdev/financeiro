@@ -16,40 +16,44 @@ export default class CartaoProvedorDadosPrismaAdapter implements ProvedorDadosCa
 
   async salvar(usuarioId: string, cartao: CartaoInputDTO): Promise<void> {
     await this.prisma.$transaction(async (trans) => {
+      const now = new Date();
       const dados = this.toCartaoPrismaCreateFromCartaoInput(cartao, usuarioId);
       await trans.cartoes.upsert({
         where: { id: cartao.id, usuario_id: usuarioId },
-        update: { ...dados, updated_at: new Date() },
-        create: { ...dados, updated_at: new Date() },
+        create: { ...dados, created_at: now },
+        update: { ...dados, updated_at: now },
       });
 
       for (const fatura of cartao.faturas) {
+        const dados = this.toFaturaPrismaCreateFromFaturaInput(fatura, cartao.id);
         await trans.faturas.upsert({
           where: {
             id_cartao_id: { id: fatura.id, cartao_id: cartao.id },
           },
-          update: this.toFaturaPrismaCreateFromFaturaInput(fatura, cartao.id),
-          create: this.toFaturaPrismaCreateFromFaturaInput(fatura, cartao.id),
+          create: { ...dados, created_at: now },
+          update: { ...dados, updated_at: now },
         });
       }
     });
   }
   async salvarTodos(usuarioId: string, cartoes: CartaoInputDTO[]): Promise<void> {
     await this.prisma.$transaction(async (trans) => {
+      const now = new Date();
       for (const cartao of cartoes) {
         const dados = this.toCartaoPrismaCreateFromCartaoInput(cartao, usuarioId);
         await trans.cartoes.upsert({
           where: { id: cartao.id, usuario_id: usuarioId },
-          update: { ...dados, updated_at: new Date() },
-          create: { ...dados, updated_at: new Date() },
+          create: { ...dados, created_at: now },
+          update: { ...dados, updated_at: now },
         });
         for (const fatura of cartao.faturas) {
+          const dados = this.toFaturaPrismaCreateFromFaturaInput(fatura, cartao.id);
           await trans.faturas.upsert({
             where: {
               id_cartao_id: { id: fatura.id, cartao_id: cartao.id },
             },
-            update: this.toFaturaPrismaCreateFromFaturaInput(fatura, cartao.id),
-            create: this.toFaturaPrismaCreateFromFaturaInput(fatura, cartao.id),
+            create: { ...dados, created_at: now },
+            update: { ...dados, updated_at: now },
           });
         }
       }
@@ -61,7 +65,11 @@ export default class CartaoProvedorDadosPrismaAdapter implements ProvedorDadosCa
         usuario_id: usuarioId,
         deleted_at: null,
       },
-      include: { faturas: true },
+      include: {
+        faturas: {
+          where: { deleted_at: null },
+        },
+      },
     });
     const cartoesOutput = consultaDb.map((c: CartaoPrismaSchema) =>
       this.toCartaoOutputFromCartaoSchema(c),
@@ -70,13 +78,23 @@ export default class CartaoProvedorDadosPrismaAdapter implements ProvedorDadosCa
     return cartoesOutput;
   }
   async excluir(usuarioId: string, cartaoId: string): Promise<void> {
-    await this.prisma.cartoes.update({
-      where: {
-        id: cartaoId,
-        usuario_id: usuarioId,
-      },
-      data: { deleted_at: new Date() },
-    });
+    const now = new Date();
+    await this.prisma.$transaction([
+      this.prisma.cartoes.update({
+        where: {
+          id: cartaoId,
+          usuario_id: usuarioId,
+        },
+        data: { deleted_at: now },
+      }),
+      this.prisma.faturas.updateMany({
+        where: {
+          cartao_id: cartaoId,
+          deleted_at: null,
+        },
+        data: { deleted_at: now },
+      }),
+    ]);
   }
   private toCartaoPrismaCreateFromCartaoInput(
     cartao: CartaoInputDTO,

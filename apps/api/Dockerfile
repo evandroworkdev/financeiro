@@ -4,6 +4,7 @@
     COPY . .  
 
     RUN npm install 
+    RUN npm run build:base
 
     WORKDIR /app/apps/api
     RUN npm run build

@@ -97,31 +97,28 @@ model saldos {
 }
 
 model transacoes_base {
-  id             String        @id @db.Uuid
-  recorrencia_id String?       @unique @db.Uuid
-  usuario_id     String?
-  conta_id       String?       @db.Uuid
-  cartao_id      String?       @db.Uuid
-  categoria_id   String?       @db.Uuid
-  nome           String        @db.VarChar(255)
-  valor          Decimal       @db.Decimal(10, 2)
-  data           DateTime      @db.Timestamptz(6)
-  consolidada    Boolean       @default(false)
-  operacao       String        @db.VarChar(10)
-  observacoes    String?
-  numero_parcela Int?
-  em_memoria     Boolean?      @default(false)
-  virtual        Boolean?      @default(false)
-  agrupar_por    String?       @db.VarChar(255)
-  base           Boolean?      @default(true)
-  created_at     DateTime?     @default(now()) @db.Timestamp(6)
-  updated_at     DateTime?     @default(now()) @db.Timestamp(6)
-  deleted_at     DateTime?     @db.Timestamp(6)
-  cartoes        cartoes?      @relation(fields: [cartao_id], references: [id], onUpdate: NoAction)
-  categorias     categorias?   @relation(fields: [categoria_id], references: [id], onUpdate: NoAction)
-  contas         contas?       @relation(fields: [conta_id], references: [id], onUpdate: NoAction)
-  recorrencias   recorrencias? @relation(fields: [recorrencia_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  usuarios       usuarios?     @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                      String                    @id @db.Uuid
+  recorrencia_id          String?                   @unique @db.Uuid
+  usuario_id              String?
+  conta_id                String?                   @db.Uuid
+  cartao_id               String?                   @db.Uuid
+  categoria_id            String?                   @db.Uuid
+  nome                    String                    @db.VarChar(255)
+  valor                   Decimal                   @db.Decimal(10, 2)
+  data                    DateTime                  @db.Timestamptz(6)
+  consolidada             Boolean                   @default(false)
+  operacao                String                    @db.VarChar(10)
+  observacoes             String?
+  numero_parcela          Int?
+  created_at              DateTime?                 @default(now()) @db.Timestamp(6)
+  updated_at              DateTime?                 @default(now()) @db.Timestamp(6)
+  deleted_at              DateTime?                 @db.Timestamp(6)
+  cartoes                 cartoes?                  @relation(fields: [cartao_id], references: [id], onUpdate: NoAction)
+  categorias              categorias?               @relation(fields: [categoria_id], references: [id], onUpdate: NoAction)
+  contas                  contas?                   @relation(fields: [conta_id], references: [id], onUpdate: NoAction)
+  recorrencias            recorrencias?             @relation(fields: [recorrencia_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios                usuarios?                 @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  valores_detalhados_base valores_detalhados_base[]
 }
 
 model usuarios {
@@ -161,32 +158,53 @@ model extratos {
 }
 
 model transacoes {
-  id                 String        @id @db.Uuid
-  extrato_id         String        @db.VarChar(7)
+  id                 String               @id @db.Uuid
+  extrato_id         String               @db.VarChar(7)
   extrato_usuario_id String
-  recorrencia_id     String?       @db.Uuid
+  recorrencia_id     String?              @db.Uuid
   usuario_id         String?
-  conta_id           String?       @db.Uuid
-  cartao_id          String?       @db.Uuid
-  categoria_id       String?       @db.Uuid
-  nome               String        @db.VarChar(255)
-  valor              Decimal       @db.Decimal(10, 2)
-  data               DateTime      @db.Timestamptz(6)
-  consolidada        Boolean       @default(false)
-  operacao           String        @db.VarChar(10)
+  conta_id           String?              @db.Uuid
+  cartao_id          String?              @db.Uuid
+  categoria_id       String?              @db.Uuid
+  nome               String               @db.VarChar(255)
+  valor              Decimal              @db.Decimal(10, 2)
+  data               DateTime             @db.Timestamptz(6)
+  consolidada        Boolean              @default(false)
+  operacao           String               @db.VarChar(10)
   observacoes        String?
   numero_parcela     Int?
-  em_memoria         Boolean?      @default(false)
-  virtual            Boolean?      @default(false)
-  agrupar_por        String?       @db.VarChar(255)
-  base               Boolean?      @default(false)
-  created_at         DateTime?     @default(now()) @db.Timestamp(6)
-  updated_at         DateTime?     @default(now()) @db.Timestamp(6)
-  deleted_at         DateTime?     @db.Timestamp(6)
-  extratos           extratos      @relation(fields: [extrato_id, extrato_usuario_id], references: [id, usuario_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_extrato")
-  cartoes            cartoes?      @relation(fields: [cartao_id], references: [id], onUpdate: NoAction)
-  categorias         categorias?   @relation(fields: [categoria_id], references: [id], onUpdate: NoAction)
-  contas             contas?       @relation(fields: [conta_id], references: [id], onUpdate: NoAction)
-  recorrencias       recorrencias? @relation(fields: [recorrencia_id], references: [id], onUpdate: NoAction)
-  usuarios           usuarios?     @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  created_at         DateTime?            @default(now()) @db.Timestamp(6)
+  updated_at         DateTime?            @default(now()) @db.Timestamp(6)
+  deleted_at         DateTime?            @db.Timestamp(6)
+  extratos           extratos             @relation(fields: [extrato_id, extrato_usuario_id], references: [id, usuario_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_extrato")
+  cartoes            cartoes?             @relation(fields: [cartao_id], references: [id], onUpdate: NoAction)
+  categorias         categorias?          @relation(fields: [categoria_id], references: [id], onUpdate: NoAction)
+  contas             contas?              @relation(fields: [conta_id], references: [id], onUpdate: NoAction)
+  recorrencias       recorrencias?        @relation(fields: [recorrencia_id], references: [id], onUpdate: NoAction)
+  usuarios           usuarios?            @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  valores_detalhados valores_detalhados[]
+}
+
+model valores_detalhados {
+  id           String     @id @db.Uuid
+  transacao_id String     @db.Uuid
+  descricao    String     @db.VarChar(40)
+  valor        Decimal    @db.Decimal(10, 2)
+  operacao     String     @db.VarChar(10)
+  created_at   DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at   DateTime?  @default(now()) @db.Timestamp(6)
+  deleted_at   DateTime?  @db.Timestamp(6)
+  transacoes   transacoes @relation(fields: [transacao_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model valores_detalhados_base {
+  id                String          @id @db.Uuid
+  transacao_base_id String          @db.Uuid
+  descricao         String          @db.VarChar(40)
+  valor             Decimal         @db.Decimal(10, 2)
+  operacao          String          @db.VarChar(10)
+  created_at        DateTime?       @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?       @default(now()) @db.Timestamp(6)
+  deleted_at        DateTime?       @db.Timestamp(6)
+  transacoes_base   transacoes_base @relation(fields: [transacao_base_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }

@@ -2,6 +2,7 @@ import {
   AnoMesId,
   Extrato,
   ExtratoProps,
+  IdUnico,
   Recorrencia,
   RecorrenciaProps,
   RepositorioExtrato,
@@ -10,6 +11,8 @@ import {
   Transacao,
   TransacaoProps,
   Usuario,
+  ValorDetalhado,
+  ValorDetalhadoProps,
 } from "core";
 import {
   ExtratoInputDTO,
@@ -21,6 +24,10 @@ import {
   TransacaoBaseOutputDTO,
   TransacaoInputDTO,
   TransacaoOutputDTO,
+  ValoresDetalhadosBaseInputDTO,
+  ValoresDetalhadosBaseOutputDTO,
+  ValoresDetalhadosInputDTO,
+  ValoresDetalhadosOutputDTO,
 } from "../../provider";
 
 export default class ExtratoRepositorio implements RepositorioExtrato {
@@ -201,12 +208,11 @@ export default class ExtratoRepositorio implements RepositorioExtrato {
       valor: transacao.valor,
       data: transacao.data,
       consolidada: transacao.consolidada,
-      emMemoria: transacao.emMemoria,
-      virtual: transacao.virtual,
       operacao: transacao.operacao,
       observacoes: transacao.observacoes,
-      valoresDetalhados: [],
-      agruparPor: transacao.agruparPor,
+      valoresDetalhados: transacao.valoresDetalhados.map((vd: ValorDetalhado) =>
+        this.toValoresDetalhadosInputFromValoresDetalhados(vd),
+      ),
     };
   }
   private toTransacaoPropsFromTransacaoOutput(transacao: TransacaoOutputDTO): TransacaoProps {
@@ -223,10 +229,9 @@ export default class ExtratoRepositorio implements RepositorioExtrato {
       categoriaId: transacao.categoriaId,
       recorrenciaId: transacao.recorrenciaId,
       numeroParcela: transacao.numeroParcela,
-      valoresDetalhados: [],
-      emMemoria: transacao.emMemoria,
-      virtual: transacao.virtual,
-      agruparPor: transacao.agruparPor ?? undefined,
+      valoresDetalhados: transacao.valoresDetalhados.map((vd: ValoresDetalhadosOutputDTO) =>
+        this.toValoresDetalhadosPropsFromValoresDetalhadosOutput(vd),
+      ),
     };
   }
   private toTransacaoBaseInputFromTransacao(
@@ -246,12 +251,11 @@ export default class ExtratoRepositorio implements RepositorioExtrato {
       valor: transacao.valor,
       data: transacao.data,
       consolidada: transacao.consolidada,
-      emMemoria: transacao.emMemoria,
-      virtual: transacao.virtual,
       operacao: transacao.operacao,
       observacoes: transacao.observacoes,
-      valoresDetalhados: [],
-      agruparPor: transacao.agruparPor,
+      valoresDetalhados: transacao.valoresDetalhados.map((vd: ValorDetalhado) =>
+        this.toValoresDetalhadosBaseInputFromValoresDetalhadosBase(vd),
+      ),
     };
   }
   private toTransacaoBasePropsFromTransacaoBaseOutput(
@@ -270,10 +274,47 @@ export default class ExtratoRepositorio implements RepositorioExtrato {
       categoriaId: transacao.categoriaId,
       recorrenciaId: transacao.recorrenciaId,
       numeroParcela: transacao.numeroParcela,
-      valoresDetalhados: [],
-      emMemoria: transacao.emMemoria,
-      virtual: transacao.virtual,
-      agruparPor: transacao.agruparPor ?? undefined,
+      valoresDetalhados: transacao.valoresDetalhados.map((vd: ValoresDetalhadosBaseOutputDTO) =>
+        this.toValoresDetalhadosBasePropsFromValoresDetalhadosBaseOutput(vd),
+      ),
+    };
+  }
+
+  private toValoresDetalhadosInputFromValoresDetalhados(
+    valoresDetalhados: ValorDetalhado,
+  ): ValoresDetalhadosInputDTO {
+    return {
+      descricao: valoresDetalhados.descricao.valor,
+      valor: valoresDetalhados.valor,
+      operacao: valoresDetalhados.operacao,
+    };
+  }
+  private toValoresDetalhadosPropsFromValoresDetalhadosOutput(
+    valoresDetalhados: ValoresDetalhadosOutputDTO,
+  ): ValorDetalhadoProps {
+    return {
+      descricao: valoresDetalhados.descricao,
+      valor: valoresDetalhados.valor,
+      operacao: valoresDetalhados.operacao as TipoOperacao,
+    };
+  }
+
+  private toValoresDetalhadosBaseInputFromValoresDetalhadosBase(
+    valoresDetalhados: ValorDetalhado,
+  ): ValoresDetalhadosBaseInputDTO {
+    return {
+      descricao: valoresDetalhados.descricao.valor,
+      valor: valoresDetalhados.valor,
+      operacao: valoresDetalhados.operacao,
+    };
+  }
+  private toValoresDetalhadosBasePropsFromValoresDetalhadosBaseOutput(
+    valoresDetalhados: ValoresDetalhadosBaseOutputDTO,
+  ): ValorDetalhadoProps {
+    return {
+      descricao: valoresDetalhados.descricao,
+      valor: valoresDetalhados.valor,
+      operacao: valoresDetalhados.operacao as TipoOperacao,
     };
   }
 }

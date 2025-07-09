@@ -23,18 +23,6 @@ export default class ExcluirTransacao implements CasoDeUso<Entrada, void> {
     if (!extrato) return Resultado.falha("EXTRATO_NULO");
     if (!transacao) return Resultado.falha("TRANSACAO_NULA");
 
-    // const outrasTransacoes = (extrato.transacoes ?? []).filter((t) => {
-    //     return t.id.diferente(transacao.id)
-    // })
-
-    // const gerarExtrato = Extrato.novo({
-    //     ...extrato.props,
-    //     transacoes: outrasTransacoes.map((t) => t.props),
-    // })
-    // if (gerarExtrato.deuErrado) return gerarExtrato.comoFalha
-
-    // const novoExtrato = gerarExtrato.instancia
-
     extrato.removerTransacao(transacao.id);
     await this.repo.salvar(usuario, extrato);
 

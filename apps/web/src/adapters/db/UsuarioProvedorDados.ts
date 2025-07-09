@@ -11,9 +11,12 @@ class UsuarioProvedorDados implements ProvedorDadosUsuario {
 
   async consultarPorEmail(email: string): Promise<UsuarioOutputDTO | null> {
     const endpoint = `/usuarios/email/${email}`;
-    const resultadoApi = await this.api.httpGet(endpoint);
-    if (!resultadoApi.sucesso) return null;
-    return resultadoApi.json;
+    try {
+      const resultadoApi = await this.api.httpGet(endpoint);
+      return resultadoApi.json;
+    } catch (error) {
+      return null;
+    }
   }
 }
 

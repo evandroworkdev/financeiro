@@ -11,12 +11,7 @@ import {
   User,
 } from "firebase/auth";
 import { app } from "../config/app";
-import {
-  MonitorarAut,
-  PararMonitoramentoAut,
-  ProvedorAutenticacao,
-  Usuario,
-} from "core";
+import { MonitorarAut, PararMonitoramentoAut, ProvedorAutenticacao, Usuario } from "core";
 import { UsuarioDTO } from "adapters";
 
 export default class FirebaseAuthProvider implements ProvedorAutenticacao {

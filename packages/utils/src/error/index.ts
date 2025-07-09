@@ -1,2 +1,4 @@
-import Erro from './Erro'
-export type { Erro }
+import Erro from "./Erro";
+import ResultadoError from "./ResultadoError";
+export type { Erro };
+export { ResultadoError };

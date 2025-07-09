@@ -1,0 +1,67 @@
+name: poupig-production
+services:
+  nginx:
+    image: nginx
+    restart: always
+    volumes:
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./docker/nginx/cert:/etc/nginx/cert
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - netpoupig
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    networks:
+      - netpoupig
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: poupig
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: poupig
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./apps/api/src/adapters/database/SQL/seed/:/docker-entrypoint-initdb.d/
+    networks:
+      - netpoupig
+  api:
+    build:
+      context: .
+      dockerfile: ./apps/api/Dockerfile
+    restart: always
+    ports:
+      - "4000:4000"
+    networks:
+      - netpoupig
+    depends_on:
+      - rabbitmq
+  web:
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+    restart: always
+    ports:
+      - "3000:3000"
+    networks:
+      - netpoupig
+
+volumes:
+  rabbitmq_data:
+  postgres_data:
+networks:
+  netpoupig:
+    driver: bridge

@@ -1,13 +1,5 @@
 import useApi from "@/data/hooks/useApi";
-import {
-  ContaApiClient,
-  ContaDTO,
-  ExtratoApiClient,
-  ExtratoDTO,
-  RecorrenciaDTO,
-  TransacaoDTO,
-  UsuarioDTO,
-} from "adapters";
+import { ExtratoApiClient, ExtratoDTO, RecorrenciaDTO, TransacaoDTO, UsuarioDTO } from "adapters";
 
 export default class ExtratoApiHttpClient implements ExtratoApiClient {
   constructor(private api: ReturnType<typeof useApi>) {}
@@ -18,7 +10,8 @@ export default class ExtratoApiHttpClient implements ExtratoApiClient {
     transacao: TransacaoDTO,
   ): Promise<void> {
     const endpoint = "/extratos/mensais";
-    await this.api.httpPut(endpoint, { usuario, extrato, transacao });
+    const resultadoApi = await this.api.httpPut(endpoint, { usuario, extrato, transacao });
+    if (!resultadoApi.sucesso) throw resultadoApi.erros;
   }
 
   async excluirTransacao(

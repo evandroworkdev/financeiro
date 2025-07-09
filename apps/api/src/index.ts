@@ -33,6 +33,7 @@ import ExtratoRecorrenciaExcluirController from "./controllers/extrato/ExtratoRe
 import ExtratoRecorrenciaSalvarController from "./controllers/extrato/ExtratoRecorrenciaSalvar";
 import sanitizeInputMiddlware from "./middlewares/sanitizeInputMiddlware";
 import { CartaoRepositorio, ContaRepositorio, ServerFacade, UsuarioRepositorio } from "adapters";
+import { ResultadoError } from "utils";
 
 const corsOrigin = process.env.CORS_ORIGIN;
 
@@ -66,32 +67,67 @@ const authRouter = express.Router();
 v1Router.use("/auth", authRouter);
 
 // Error Handler ------------------------------------------
+type ErrorResponse = {
+  error: string;
+  message: string;
+  errors: {}[];
+};
+
 app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) {
     next(error);
-    return; // Se os headers já foram enviados, não tente enviar outra resposta
+    return;
   }
+  const response: ErrorResponse = {
+    error: "ERRO_DESCONHECIDO",
+    message: "Erro desconhecido",
+    errors: [],
+  };
+
+  if (error instanceof ResultadoError) {
+    response.error = "ERRO_CORE";
+    response.message = error.message;
+    response.errors = error.erros;
+    res.status(400).json(response);
+    return;
+  }
+
   if (error instanceof Error) {
     if (error.message.startsWith("Dados Inválidos: ")) {
-      res.status(400).json({ message: error.message });
+      response.error = "DADOS_INVALIDOS";
+      response.message = "Os dados enviandos são inválidos";
+      response.errors.push({ message: error.message });
+      res.status(400).json(response);
       return;
     }
     if (error.message.startsWith("Não Autorizado: ")) {
-      res.status(403).json({ message: error.message });
+      response.error = "NAO_AUTORIZADO";
+      response.message = "Não autorizado";
+      response.errors.push({ message: error.message });
+      res.status(403).json(response);
       return;
     }
     if (error.message.endsWith("usuário não encontrado")) {
+      response.error = "USUARIO_NAO_ENCONTRADO";
+      response.message = "Usuário não encontrado";
+      response.errors.push({ message: error.message });
       res.sendStatus(204);
       return;
     }
     if (error.message.endsWith("não encontrado")) {
-      res.status(404).json({ message: error.message });
+      response.error = "NAO_ENCONTRADO";
+      response.message = "Recurso não encontrado";
+      response.errors.push({ message: error.message });
+      res.status(404).json(response);
       return;
     }
-    res.status(500).json({ message: error.stack });
+    response.error = "ERROR_DESCONHECIDO";
+    response.message = "Error desconhecido";
+    response.errors.push({ message: error.message });
+    res.status(500).json({ response });
     return;
   } else {
-    res.status(500).json({ message: "Erro desconhecido", Erro: error });
+    res.status(500).json(response);
     return;
   }
 });

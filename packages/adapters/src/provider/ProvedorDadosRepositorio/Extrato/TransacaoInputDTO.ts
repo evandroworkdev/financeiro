@@ -1,3 +1,5 @@
+import { ValoresDetalhadosInputDTO } from "./ValoresDetalhadosInputDTO";
+
 export interface TransacaoInputDTO {
   id: string;
   usuarioId: string;
@@ -14,8 +16,5 @@ export interface TransacaoInputDTO {
   categoriaId: string | null;
   recorrenciaId: string | null;
   numeroParcela: number | null;
-  valoresDetalhados: [];
-  emMemoria: boolean;
-  virtual: boolean;
-  agruparPor: string;
+  valoresDetalhados: ValoresDetalhadosInputDTO[];
 }

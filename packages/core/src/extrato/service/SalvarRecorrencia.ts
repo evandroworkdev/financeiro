@@ -22,9 +22,6 @@ export default class SalvarRecorrencia implements CasoDeUso<Recorrencia, void> {
     const extratos = consultarExtratos.instancia;
     if (consultarExtratos.deuErrado) return consultarExtratos.comoFalha;
 
-    console.log("Extratos Consultados: ");
-    extratos.map((e) => e.transacoes.map((t) => console.log(t.id.valor)));
-
     const gerarTodosOsExtratos = await this.gerarExtratos(usuario, extratos, recorrencia);
     const todosOsExtratos = gerarTodosOsExtratos.instancia;
     if (gerarTodosOsExtratos.deuErrado) return gerarTodosOsExtratos.comoFalha;
@@ -41,9 +38,6 @@ export default class SalvarRecorrencia implements CasoDeUso<Recorrencia, void> {
       corpo: extratosAlterados.map((e) => e.props),
     } as EventoProps);
     if (criarEvento.deuErrado) return criarEvento.comoFalha;
-
-    console.log("Extratos Alterados: ");
-    extratosAlterados.map((e) => e.transacoes.map((t) => console.log(t.id.valor)));
 
     await this.repo.salvarRecorrencia(usuario, extratosAlterados, recorrencia);
     return this.publicadorEvento.publicar(criarEvento.instancia);

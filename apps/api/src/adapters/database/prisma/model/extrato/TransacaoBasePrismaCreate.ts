@@ -12,10 +12,6 @@ export interface TransacaoBasePrismaCreate {
   operacao: string;
   observacoes: string | null;
   numero_parcela: number | null;
-  em_memoria: boolean | null;
-  virtual: boolean | null;
-  agrupar_por: string | null;
-  base: boolean | null;
   created_at?: Date | null;
   updated_at?: Date | null;
   deleted_at?: Date | null;

@@ -113,10 +113,6 @@ CREATE TABLE IF NOT EXISTS transacoes (
     operacao VARCHAR(10) NOT NULL,
     observacoes TEXT,
     numero_parcela INTEGER,
-    em_memoria BOOLEAN DEFAULT FALSE,
-    virtual BOOLEAN DEFAULT FALSE,
-    agrupar_por VARCHAR(255),
-    base BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP,
@@ -141,14 +137,33 @@ CREATE TABLE IF NOT EXISTS transacoes_base (
     operacao VARCHAR(10) NOT NULL,
     observacoes TEXT,
     numero_parcela INTEGER,
-    em_memoria BOOLEAN DEFAULT FALSE,
-    virtual BOOLEAN DEFAULT FALSE,
-    agrupar_por VARCHAR(255),
-    base BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS valores_detalhados (
+    id UUID PRIMARY KEY,
+    transacao_id UUID NOT NULL REFERENCES transacoes(id) ON DELETE CASCADE,
+    descricao VARCHAR(40) NOT NULL,
+    valor NUMERIC(10, 2) NOT NULL,
+    operacao VARCHAR(10) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS valores_detalhados_base (
+    id UUID PRIMARY KEY,
+    transacao_base_id UUID NOT NULL REFERENCES transacoes_base(id) ON DELETE CASCADE,
+    descricao VARCHAR(40) NOT NULL,
+    valor NUMERIC(10, 2) NOT NULL,
+    operacao VARCHAR(10) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
+);
+
 
 INSERT INTO usuarios (
     id, 

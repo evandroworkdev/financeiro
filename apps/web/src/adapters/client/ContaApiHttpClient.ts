@@ -16,7 +16,7 @@ export default class ContaApiHttpClient implements ContaApiClient {
   }
 
   async excluir(usuario: UsuarioDTO, conta: ContaDTO): Promise<void> {
-    const endpoint = `"/contas/${conta.id}"`;
+    const endpoint = `/contas/${conta.id}`;
     await this.api.httpPatch(endpoint, { usuario, conta });
   }
 }

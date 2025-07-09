@@ -1,3 +1,5 @@
+import { ValoresDetalhadosBaseOutputDTO } from "./ValoresDetalhadosBaseOutputDTO";
+
 export interface TransacaoBaseOutputDTO {
   id: string;
   contaId: string | null;
@@ -11,8 +13,5 @@ export interface TransacaoBaseOutputDTO {
   consolidada: boolean;
   operacao: string;
   observacoes: string | null;
-  emMemoria: boolean;
-  virtual: boolean;
-  agruparPor: string | null;
-  valoresDetalhados: [];
+  valoresDetalhados: ValoresDetalhadosBaseOutputDTO[];
 }

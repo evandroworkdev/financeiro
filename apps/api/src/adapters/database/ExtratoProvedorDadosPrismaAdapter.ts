@@ -9,8 +9,12 @@ import {
   TransacaoBaseOutputDTO,
   TransacaoInputDTO,
   TransacaoOutputDTO,
+  ValoresDetalhadosBaseInputDTO,
+  ValoresDetalhadosBaseOutputDTO,
+  ValoresDetalhadosInputDTO,
+  ValoresDetalhadosOutputDTO,
 } from "adapters";
-import { fn } from "utils";
+import { fn, IdUnico } from "utils";
 import { ExtratoPrismaCreate } from "./prisma/model/extrato/ExtratoPrismaCreate";
 import { ExtratoPrismaSchema } from "./prisma/model/extrato/ExtratoPrismaSchema";
 import { RecorrenciaPrismaCreate } from "./prisma/model/extrato/RecorrenciaPrismaCreate";
@@ -19,12 +23,17 @@ import { TransacaoPrismaCreate } from "./prisma/model/extrato/TransacaoPrismaCre
 import { TransacaoPrismaSchema } from "./prisma/model/extrato/TransacaoPrismaSchema";
 import { TransacaoBasePrismaCreate } from "./prisma/model/extrato/TransacaoBasePrismaCreate";
 import { TransacaoBasePrismaSchema } from "./prisma/model/extrato/TransacaoBasePrismaSchema";
+import { ValoresDetalhadosBasePrismaSchema } from "./prisma/model/extrato/ValoresDetalhadosBasePrismaSchema";
+import { ValoresDetalhadosBasePrismaCreate } from "./prisma/model/extrato/ValoresDetalhadosBasePrismaCreate";
+import { ValoresDetalhadosPrismaSchema } from "./prisma/model/extrato/ValoresDetalhadosPrismaSchema";
+import { ValoresDetalhadosPrismaCreate } from "./prisma/model/extrato/ValoresDetalhadosPrismaCreate";
 
 export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosExtrato {
   constructor(private readonly prisma: PrismaClient) {}
 
   async salvar(usuarioId: string, extrato: ExtratoInputDTO): Promise<void> {
     await this.prisma.$transaction(async (trans) => {
+      const now = new Date();
       const dados = this.toExtratoPrismaCreateFromExtratoInput(extrato, usuarioId);
       await trans.extratos.upsert({
         where: {
@@ -33,8 +42,8 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
             usuario_id: usuarioId,
           },
         },
-        update: { ...dados, updated_at: new Date() },
-        create: { ...dados, updated_at: new Date() },
+        create: { ...dados, created_at: now },
+        update: { ...dados, updated_at: now },
       });
       for (const transacao of extrato.transacoes) {
         const dados = this.toTransacaoPrismaCreateFromTransacaoInput(
@@ -44,14 +53,25 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
         );
         await trans.transacoes.upsert({
           where: { id: transacao.id },
-          update: { ...dados, updated_at: new Date() },
-          create: { ...dados, updated_at: new Date() },
+          create: { ...dados, created_at: now },
+          update: { ...dados, updated_at: now },
         });
+        await trans.valores_detalhados.deleteMany({
+          where: { transacao_id: transacao.id },
+        });
+        for (const valoresDetalhado of transacao.valoresDetalhados) {
+          const dados = this.toValoresDetalhadosPrismaCreateFromValoresDetalhadosInput(
+            valoresDetalhado,
+            transacao.id,
+          );
+          await trans.valores_detalhados.create({
+            data: { ...dados, created_at: now },
+          });
+        }
       }
       for (const idTransacaoRemovida of extrato.transacoesRemovidas) {
-        await trans.transacoes.update({
+        await trans.transacoes.delete({
           where: { id: idTransacaoRemovida },
-          data: { deleted_at: new Date() },
         });
       }
     });
@@ -59,6 +79,7 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
   async salvarTodos(usuarioId: string, extratos: ExtratoInputDTO[]): Promise<void> {
     await this.prisma.$transaction(async (trans) => {
       for (const extrato of extratos) {
+        const now = new Date();
         const dados = this.toExtratoPrismaCreateFromExtratoInput(extrato, usuarioId);
         await trans.extratos.upsert({
           where: {
@@ -67,8 +88,8 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
               usuario_id: usuarioId,
             },
           },
-          update: { ...dados, updated_at: new Date() },
-          create: { ...dados, updated_at: new Date() },
+          create: { ...dados, created_at: now },
+          update: { ...dados, updated_at: now },
         });
 
         for (const transacao of extrato.transacoes) {
@@ -79,14 +100,26 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
           );
           await trans.transacoes.upsert({
             where: { id: transacao.id },
-            update: { ...dados, updated_at: new Date() },
-            create: { ...dados, updated_at: new Date() },
+            create: { ...dados, created_at: now },
+            update: { ...dados, updated_at: now },
           });
+
+          await trans.valores_detalhados.deleteMany({
+            where: { transacao_id: transacao.id },
+          });
+          for (const valoresDetalhado of transacao.valoresDetalhados) {
+            const dados = this.toValoresDetalhadosPrismaCreateFromValoresDetalhadosInput(
+              valoresDetalhado,
+              transacao.id,
+            );
+            await trans.valores_detalhados.create({
+              data: { ...dados, created_at: now },
+            });
+          }
         }
         for (const idTransacaoRemovida of extrato.transacoesRemovidas) {
-          await trans.transacoes.update({
+          await trans.transacoes.delete({
             where: { id: idTransacaoRemovida },
-            data: { deleted_at: new Date() },
           });
         }
       }
@@ -98,14 +131,15 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
     recorrencia: RecorrenciaInputDTO,
   ): Promise<void> {
     await this.prisma.$transaction(async (trans) => {
+      const now = new Date();
       const dadosRecorrencia = this.toRecorrenciaPrismaCreateFromRecorrenciaInput(
         recorrencia,
         usuarioId,
       );
       await trans.recorrencias.upsert({
         where: { id: recorrencia.id },
-        create: { ...dadosRecorrencia, updated_at: new Date() },
-        update: { ...dadosRecorrencia, updated_at: new Date() },
+        create: { ...dadosRecorrencia, created_at: now },
+        update: { ...dadosRecorrencia, updated_at: now },
       });
 
       const dadosTransacaoBase = this.toTransacaoBasePrismaCreateFromTransacaoBaseInput(
@@ -114,9 +148,21 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
       );
       await trans.transacoes_base.upsert({
         where: { recorrencia_id: recorrencia.id },
-        create: { ...dadosTransacaoBase, updated_at: new Date() },
-        update: { ...dadosTransacaoBase, updated_at: new Date() },
+        create: { ...dadosTransacaoBase, created_at: now },
+        update: { ...dadosTransacaoBase, updated_at: now },
       });
+      await trans.valores_detalhados_base.deleteMany({
+        where: { transacao_base_id: recorrencia.transacao.id },
+      });
+      for (const valoresDetalhadoBase of recorrencia.transacao.valoresDetalhados) {
+        const dados = this.toValoresDetalhadosBasePrismaCreateFromValoresDetalhadosBaseInput(
+          valoresDetalhadoBase,
+          recorrencia.transacao.id,
+        );
+        await trans.valores_detalhados_base.create({
+          data: { ...dados, created_at: now },
+        });
+      }
 
       for (const extrato of extratos) {
         const dadosExtrato = this.toExtratoPrismaCreateFromExtratoInput(extrato, usuarioId);
@@ -127,8 +173,8 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
               usuario_id: usuarioId,
             },
           },
-          update: { ...dadosExtrato, updated_at: new Date() },
-          create: { ...dadosExtrato, updated_at: new Date() },
+          create: { ...dadosExtrato, created_at: now },
+          update: { ...dadosExtrato, updated_at: now },
         });
         for (const transacao of extrato.transacoes) {
           const dadosTransacao = this.toTransacaoPrismaCreateFromTransacaoInput(
@@ -138,14 +184,25 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
           );
           await trans.transacoes.upsert({
             where: { id: transacao.id },
-            create: { ...dadosTransacao, updated_at: new Date() },
-            update: { ...dadosTransacao, updated_at: new Date() },
+            create: { ...dadosTransacao, created_at: now },
+            update: { ...dadosTransacao, updated_at: now },
           });
+          await trans.valores_detalhados.deleteMany({
+            where: { transacao_id: transacao.id },
+          });
+          for (const valoresDetalhado of transacao.valoresDetalhados) {
+            const dados = this.toValoresDetalhadosPrismaCreateFromValoresDetalhadosInput(
+              valoresDetalhado,
+              transacao.id,
+            );
+            await trans.valores_detalhados.create({
+              data: { ...dados, created_at: now },
+            });
+          }
         }
         for (const idTransacaoRemovida of extrato.transacoesRemovidas) {
-          await trans.transacoes.update({
+          await trans.transacoes.delete({
             where: { id: idTransacaoRemovida },
-            data: { deleted_at: new Date() },
           });
         }
       }
@@ -162,23 +219,27 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
           where: {
             deleted_at: null,
           },
+          include: { valores_detalhados: true },
         },
       },
     });
     const extratosOutput = consultaDb.map((extrato: ExtratoPrismaSchema) =>
       this.toExtratoOutputFromExtratoSchema(extrato),
     );
-
     return extratosOutput;
   }
   async consultarPorId(usuarioId: string, id: string): Promise<ExtratoOutputDTO | null> {
     const consultaDb = await this.prisma.extratos.findUnique({
-      where: { id_usuario_id: { id: id, usuario_id: usuarioId } },
+      where: {
+        id_usuario_id: { id: id, usuario_id: usuarioId },
+        deleted_at: null,
+      },
       include: {
         transacoes: {
           where: {
             deleted_at: null,
           },
+          include: { valores_detalhados: true },
         },
       },
     });
@@ -194,12 +255,14 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
         id: {
           in: idsValor,
         },
+        deleted_at: null,
       },
       include: {
         transacoes: {
           where: {
             deleted_at: null,
           },
+          include: { valores_detalhados: true },
         },
       },
     });
@@ -216,6 +279,7 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
 
     const recorrenciasDb = await this.prisma.recorrencias.findMany({
       where: {
+        deleted_at: null,
         usuario_id: usuarioId,
         transacoes_base: {
           is: {
@@ -224,10 +288,14 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
             },
           },
         },
-        deleted_at: null,
       },
       include: {
-        transacoes_base: true,
+        transacoes_base: {
+          where: {
+            deleted_at: null,
+          },
+          include: { valores_detalhados_base: true },
+        },
       },
     });
 
@@ -241,8 +309,15 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
     id: string,
   ): Promise<RecorrenciaOutputDTO | null> {
     const recorrenciaBd = await this.prisma.recorrencias.findUnique({
-      where: { id: id, usuario_id: usuarioId },
-      include: { transacoes_base: true },
+      where: { deleted_at: null, id: id, usuario_id: usuarioId },
+      include: {
+        transacoes_base: {
+          where: {
+            deleted_at: null,
+          },
+          include: { valores_detalhados_base: true },
+        },
+      },
     });
     if (!recorrenciaBd) return null;
     const recorrenciaOutput = this.toRecorrenciaOutputFromRecorrenciaSchema(recorrenciaBd);
@@ -250,8 +325,15 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
   }
   async consultarRecorrencias(usuarioId: string): Promise<RecorrenciaOutputDTO[]> {
     const recorrenciasBd = await this.prisma.recorrencias.findMany({
-      where: { usuario_id: usuarioId },
-      include: { transacoes_base: true },
+      where: { deleted_at: null, usuario_id: usuarioId },
+      include: {
+        transacoes_base: {
+          where: {
+            deleted_at: null,
+          },
+          include: { valores_detalhados_base: true },
+        },
+      },
     });
     const recorrenciasOutput = recorrenciasBd.map((r: RecorrenciaPrismaSchema) =>
       this.toRecorrenciaOutputFromRecorrenciaSchema(r),
@@ -264,8 +346,19 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
     recorrencia: RecorrenciaInputDTO,
   ): Promise<void> {
     await this.prisma.$transaction(async (trans) => {
-      await trans.recorrencias.delete({
-        where: { id: recorrencia.id },
+      const now = new Date();
+
+      await trans.recorrencias.update({
+        where: { id: recorrencia.id, usuario_id: usuarioId },
+        data: { deleted_at: now },
+      });
+      await trans.transacoes_base.update({
+        where: { id: recorrencia.transacao.id, usuario_id: usuarioId },
+        data: { deleted_at: now },
+      });
+      await trans.valores_detalhados_base.updateMany({
+        where: { transacao_base_id: recorrencia.transacao.id },
+        data: { deleted_at: now },
       });
 
       for (const extrato of extratos) {
@@ -277,9 +370,20 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
               usuario_id: usuarioId,
             },
           },
-          update: { ...dados, updated_at: new Date() },
-          create: { ...dados, updated_at: new Date() },
+          create: { ...dados, created_at: now },
+          update: { ...dados, updated_at: now },
         });
+
+        for (const idTransacaoRemovida of extrato.transacoesRemovidas) {
+          await trans.transacoes.update({
+            where: { id: idTransacaoRemovida },
+            data: { deleted_at: now },
+          });
+          await trans.valores_detalhados.updateMany({
+            where: { transacao_id: idTransacaoRemovida },
+            data: { deleted_at: now },
+          });
+        }
 
         for (const transacao of extrato.transacoes) {
           const dados = this.toTransacaoPrismaCreateFromTransacaoInput(
@@ -288,9 +392,9 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
             extrato.id,
           );
           await trans.transacoes.upsert({
-            where: { id: transacao.id },
-            update: { ...dados, updated_at: new Date() },
-            create: { ...dados, updated_at: new Date() },
+            where: { id: transacao.id, usuario_id: usuarioId },
+            create: { ...dados, created_at: now },
+            update: { ...dados, updated_at: now },
           });
         }
       }
@@ -374,10 +478,6 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
       operacao: transacao.operacao,
       observacoes: transacao.observacoes,
       numero_parcela: transacao.numeroParcela,
-      em_memoria: transacao.emMemoria,
-      virtual: transacao.virtual,
-      agrupar_por: transacao.agruparPor,
-      base: false,
     };
   }
 
@@ -397,10 +497,10 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
       categoriaId: transacaoSchema.categoria_id,
       numeroParcela: transacaoSchema.numero_parcela,
       recorrenciaId: transacaoSchema.recorrencia_id,
-      valoresDetalhados: [],
-      emMemoria: transacaoSchema.em_memoria ?? false,
-      virtual: transacaoSchema.virtual ?? false,
-      agruparPor: transacaoSchema.agrupar_por,
+      valoresDetalhados: transacaoSchema.valores_detalhados.map(
+        (vd: ValoresDetalhadosPrismaSchema) =>
+          this.toValoresDetalhadosOutputFromValoresDetalhadosSchema(vd),
+      ),
     };
   }
   private toTransacaoBasePrismaCreateFromTransacaoBaseInput(
@@ -421,10 +521,6 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
       operacao: transacaoBase.operacao,
       observacoes: transacaoBase.observacoes,
       numero_parcela: transacaoBase.numeroParcela,
-      em_memoria: transacaoBase.emMemoria,
-      virtual: transacaoBase.virtual,
-      agrupar_por: transacaoBase.agruparPor,
-      base: true,
     };
   }
 
@@ -444,10 +540,55 @@ export default class ExtratoProvedorDadosPrismaAdapter implements ProvedorDadosE
       consolidada: transacaoBaseSchema.consolidada,
       operacao: transacaoBaseSchema.operacao,
       observacoes: transacaoBaseSchema.observacoes,
-      emMemoria: transacaoBaseSchema.em_memoria ?? false,
-      virtual: transacaoBaseSchema.virtual ?? false,
-      agruparPor: transacaoBaseSchema.agrupar_por ?? null,
-      valoresDetalhados: [],
+      valoresDetalhados: transacaoBaseSchema.valores_detalhados_base.map((vd) =>
+        this.toValoresDetalhadosBaseOutputFromValoresDetalhadosBaseSchema(vd),
+      ),
+    };
+  }
+
+  private toValoresDetalhadosPrismaCreateFromValoresDetalhadosInput(
+    valoresDetalhados: ValoresDetalhadosInputDTO,
+    transacaoId: string,
+  ): ValoresDetalhadosPrismaCreate {
+    return {
+      id: IdUnico.gerar(),
+      transacao_id: transacaoId,
+      descricao: valoresDetalhados.descricao,
+      valor: valoresDetalhados.valor,
+      operacao: valoresDetalhados.operacao,
+    };
+  }
+
+  private toValoresDetalhadosOutputFromValoresDetalhadosSchema(
+    valoresDetalhadosSchema: ValoresDetalhadosPrismaSchema,
+  ): ValoresDetalhadosOutputDTO {
+    return {
+      descricao: valoresDetalhadosSchema.descricao,
+      valor: parseFloat(valoresDetalhadosSchema.valor.toString()),
+      operacao: valoresDetalhadosSchema.operacao,
+    };
+  }
+
+  private toValoresDetalhadosBasePrismaCreateFromValoresDetalhadosBaseInput(
+    valoresDetalhadosBase: ValoresDetalhadosBaseInputDTO,
+    transacaoBaseId: string,
+  ): ValoresDetalhadosBasePrismaCreate {
+    return {
+      id: IdUnico.gerar(),
+      transacao_base_id: transacaoBaseId,
+      descricao: valoresDetalhadosBase.descricao,
+      valor: valoresDetalhadosBase.valor,
+      operacao: valoresDetalhadosBase.operacao,
+    };
+  }
+
+  private toValoresDetalhadosBaseOutputFromValoresDetalhadosBaseSchema(
+    valoresDetalhadosSchema: ValoresDetalhadosBasePrismaSchema,
+  ): ValoresDetalhadosBaseOutputDTO {
+    return {
+      descricao: valoresDetalhadosSchema.descricao,
+      valor: parseFloat(valoresDetalhadosSchema.valor.toString()),
+      operacao: valoresDetalhadosSchema.operacao,
     };
   }
 }

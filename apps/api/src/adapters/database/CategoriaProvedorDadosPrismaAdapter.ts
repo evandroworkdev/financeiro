@@ -7,20 +7,22 @@ export default class CategoriaProvedorDadosPrismaAdapter implements ProvedorDado
 
   async salvar(usuarioId: string, categoria: CategoriaInputDTO): Promise<void> {
     const dados = this.toCategoriaSchemaFromCategoriaInput(categoria, usuarioId);
+    const now = new Date();
     await this.prisma.categorias.upsert({
       where: { usuario_id: usuarioId, id: categoria.id },
-      update: { ...dados, updated_at: new Date() },
-      create: dados,
+      create: { ...dados, created_at: now },
+      update: { ...dados, updated_at: now },
     });
   }
   async salvarTodas(usuarioId: string, categorias: CategoriaInputDTO[]): Promise<void> {
+    const now = new Date();
     await this.prisma.$transaction(async (trans) => {
       for (const categoria of categorias) {
         const dados = this.toCategoriaSchemaFromCategoriaInput(categoria, usuarioId);
         await trans.categorias.upsert({
           where: { id: categoria.id },
-          update: { ...dados, updated_at: new Date() },
-          create: dados,
+          create: { ...dados, created_at: now },
+          update: { ...dados, updated_at: now },
         });
       }
     });

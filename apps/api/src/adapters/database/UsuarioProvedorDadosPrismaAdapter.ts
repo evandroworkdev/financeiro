@@ -7,19 +7,21 @@ export default class UsuarioProvedorDadosPrismaAdapter implements ProvedorDadosU
   constructor(private readonly prisma: PrismaClient) {}
 
   async salvar(usuario: UsuarioInputDTO): Promise<void> {
+    const now = new Date();
     const dados = this.toUsuarioPrismaCreateFromUsuarioInput(usuario);
     await this.prisma.usuarios.upsert({
       where: {
         id: usuario.id,
       },
-      update: { ...dados, updated_at: new Date() },
-      create: { ...dados, updated_at: new Date() },
+      create: { ...dados, updated_at: now },
+      update: { ...dados, updated_at: now },
     });
   }
   async consultarPorEmail(email: string): Promise<UsuarioOutputDTO | null> {
     const usuarioDb = await this.prisma.usuarios.findUnique({
       where: {
         email: email,
+        deleted_at: null,
       },
     });
     if (!usuarioDb) return null;
